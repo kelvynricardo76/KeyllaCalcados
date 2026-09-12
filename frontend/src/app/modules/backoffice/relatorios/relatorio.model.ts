@@ -60,3 +60,21 @@ export interface ProdutoParado {
   diasSemVenda?: number | null;
   quantidadeEmEstoque: number;
 }
+
+export interface RelatorioFinanceiro {
+  inicio: string;
+  fim: string;
+  quantidadeVendas: number;
+  ticketMedio: number;
+  faturamentoBruto: number;
+  descontos: number;
+  devolucoes: number;
+  faturamentoLiquido: number;
+  cmv: number;
+  lucroBruto: number;
+  margemBruta: number;
+  despesas: number;
+  receitasAvulsas: number;
+  lucroLiquido: number;
+  margemLiquida: number;
+}

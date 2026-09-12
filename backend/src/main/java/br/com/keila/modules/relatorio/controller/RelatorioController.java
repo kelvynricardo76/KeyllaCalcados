@@ -5,6 +5,7 @@ import br.com.keila.modules.relatorio.dto.DashboardResponse;
 import br.com.keila.modules.relatorio.dto.FuncionarioRankingResponse;
 import br.com.keila.modules.relatorio.dto.ProdutoParadoResponse;
 import br.com.keila.modules.relatorio.dto.ProdutoVencendoResponse;
+import br.com.keila.modules.relatorio.dto.RelatorioFinanceiroResponse;
 import br.com.keila.modules.relatorio.dto.RelatorioVendasResponse;
 import br.com.keila.modules.relatorio.service.RelatorioService;
 import lombok.RequiredArgsConstructor;
@@ -58,5 +59,12 @@ public class RelatorioController {
     @GetMapping("/produtos-parados")
     public List<ProdutoParadoResponse> produtosParados(@RequestParam(defaultValue = "60") int dias) {
         return relatorioService.produtosParados(dias);
+    }
+
+    @GetMapping("/financeiro")
+    public RelatorioFinanceiroResponse relatorioFinanceiro(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fim) {
+        return relatorioService.relatorioFinanceiro(inicio, fim);
     }
 }

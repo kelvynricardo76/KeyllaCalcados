@@ -34,7 +34,7 @@
           <tr><td colspan="10" class="text-center text-muted">Nenhuma sessão de caixa registrada ainda.</td></tr>
         } @else {
           @for (s of sessoes(); track s.id) {
-            <tr>
+            <tr class="linha-clicavel" (click)="verDetalheSessao(s)">
               <td>{{ s.caixaNome }}</td>
               <td>{{ s.usuarioNome }}</td>
               <td>{{ s.dataAbertura | date:'dd/MM/yyyy HH:mm' }}</td>
@@ -57,7 +57,7 @@
                 </span>
               </td>
               <td>
-                <button class="btn btn-outline btn-sm" (click)="verMovimentacoes(s)">Movimentações</button>
+                <button type="button" class="btn btn-outline btn-sm" (click)="verDetalheSessao(s); $event.stopPropagation()">Ver detalhes</button>
               </td>
             </tr>
           }
@@ -66,8 +66,45 @@
     </table>
   </div>
 
-  @if (showMovimentacoes() && sessaoSelecionada(); as s) {
-    <app-modal [titulo]="'Movimentações — ' + s.caixaNome" (fechar)="fecharMovimentacoes()">
+  <!-- ── Modal: detalhe completo da sessão (vendas + movimentações) ── -->
+  @if (showDetalheSessao() && sessaoSelecionada(); as s) {
+    <app-modal [titulo]="'Sessão — ' + s.caixaNome" [maxWidth]="900" (fechar)="fecharDetalheSessao()">
+      <div class="sessao-resumo">
+        <div><span>Operador</span><strong>{{ s.usuarioNome }}</strong></div>
+        <div><span>Total em Vendas</span><strong>{{ totalVendasSessao() | currency:'BRL' }}</strong></div>
+        <div><span>Entradas Avulsas</span><strong class="text-success">+ {{ totalEntradasSessao() | currency:'BRL' }}</strong></div>
+        <div><span>Saídas Avulsas</span><strong class="text-danger">− {{ totalSaidasSessao() | currency:'BRL' }}</strong></div>
+      </div>
+
+      <h4 class="section-title">Vendas Realizadas</h4>
+      <div class="table-container mb-3">
+        <table class="data-table">
+          <thead><tr><th>Hora</th><th>Cliente</th><th>Itens</th><th>Pagamento</th><th>Status</th><th>Valor</th></tr></thead>
+          <tbody>
+            @if (carregandoDetalhe()) {
+              <tr><td colspan="6" class="text-center text-muted">Carregando...</td></tr>
+            } @else if (vendasDaSessao().length === 0) {
+              <tr><td colspan="6" class="text-center text-muted">Nenhuma venda nesta sessão.</td></tr>
+            }
+            @for (v of vendasDaSessao(); track v.id) {
+              <tr class="linha-clicavel" (click)="abrirDetalheVenda(v)">
+                <td>{{ v.createdAt | date:'HH:mm' }}</td>
+                <td>{{ v.clienteNome ?? 'Consumidor final' }}</td>
+                <td class="itens-resumo">{{ resumoItens(v) }}</td>
+                <td>{{ resumoPagamentos(v) }}</td>
+                <td>
+                  <span class="badge" [class.badge-success]="v.status === 'FECHADA'" [class.badge-warning]="v.status === 'ABERTA'" [class.badge-danger]="v.status === 'CANCELADA'">
+                    {{ v.status }}
+                  </span>
+                </td>
+                <td>{{ v.valorTotal | currency:'BRL' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <h4 class="section-title">Movimentações Avulsas</h4>
       <div class="table-container">
         <table class="data-table">
           <thead><tr><th>Data</th><th>Tipo</th><th>Valor</th><th>Descrição</th><th>Usuário</th></tr></thead>
@@ -91,6 +128,70 @@
             }
           </tbody>
         </table>
+      </div>
+    </app-modal>
+  }
+
+  <!-- ── Modal: detalhe completo da venda ─────────────────────────── -->
+  @if (vendaSelecionada(); as v) {
+    <app-modal [titulo]="'Venda #' + v.id" (fechar)="fecharDetalheVenda()">
+      <div class="detalhe-venda-info">
+        <p><strong>Data/Hora:</strong> {{ v.createdAt | date:'dd/MM/yyyy HH:mm' }}</p>
+        <p><strong>Cliente:</strong> {{ v.clienteNome ?? 'Consumidor final' }}</p>
+        <p><strong>Vendedor:</strong> {{ v.usuarioNome }}</p>
+      </div>
+
+      <h4 class="section-title">Itens</h4>
+      <div class="table-container mb-3">
+        <table class="data-table">
+          <thead><tr><th>Produto</th><th>Tamanho</th><th>Cor</th><th>Qtd.</th><th>Preço Unit.</th><th>Subtotal</th></tr></thead>
+          <tbody>
+            @for (item of v.itens; track item.id) {
+              <tr>
+                <td>{{ item.nomeProduto }}</td>
+                <td>{{ item.tamanho ?? '—' }}</td>
+                <td>{{ item.cor ?? '—' }}</td>
+                <td>{{ item.quantidade }}</td>
+                <td>{{ item.precoUnitario | currency:'BRL' }}</td>
+                <td>{{ item.subtotal | currency:'BRL' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <h4 class="section-title">Pagamento</h4>
+      <div class="table-container mb-3">
+        <table class="data-table">
+          <thead><tr><th>Forma</th><th>Valor</th><th>Parcelas</th></tr></thead>
+          <tbody>
+            @if (v.pagamentos.length === 0) {
+              <tr><td colspan="3" class="text-center text-muted">Sem pagamentos registrados.</td></tr>
+            }
+            @for (p of v.pagamentos; track p.id) {
+              <tr>
+                <td>{{ labelForma(p.forma) }}</td>
+                <td>{{ p.valor | currency:'BRL' }}</td>
+                <td>{{ p.parcelas }}x</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="resumo-venda">
+        <div><span>Subtotal</span><strong>{{ v.subtotal | currency:'BRL' }}</strong></div>
+        @if (v.descontoGeral > 0) {
+          <div><span>Desconto</span><strong>− {{ v.descontoGeral | currency:'BRL' }}</strong></div>
+        }
+        <div class="total-linha"><span>Total</span><strong>{{ v.valorTotal | currency:'BRL' }}</strong></div>
+        @if (v.troco && v.troco > 0) {
+          <div><span>Troco</span><strong>{{ v.troco | currency:'BRL' }}</strong></div>
+        }
+      </div>
+
+      <div modal-footer>
+        <button type="button" class="btn btn-outline" (click)="fecharDetalheVenda()">Fechar</button>
       </div>
     </app-modal>
   }

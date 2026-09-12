@@ -53,3 +53,14 @@
   margin-top: 12px;
 }
 
+.linha-clicavel {
+  cursor: pointer;
+  transition: background 0.15s ease;
+  &:hover { background: var(--surface-bg); }
+}
+
+.detalhe-compra-info {
+  margin-bottom: 16px;
+  p { margin: 4px 0; font-size: 0.9rem; }
+}
+

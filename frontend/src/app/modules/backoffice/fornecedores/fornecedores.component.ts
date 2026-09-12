@@ -38,6 +38,8 @@ export class FornecedoresComponent implements OnInit {
   showCompraForm = signal(false);
   itensCompra = signal<ItemCompraRequest[]>([]);
 
+  compraSelecionada = signal<Compra | null>(null);
+
   fornecedorForm = this.fb.nonNullable.group({
     razaoSocial: ['', Validators.required],
     cnpj: [''],
@@ -187,5 +189,13 @@ export class FornecedoresComponent implements OnInit {
 
   cancelarCompra(compra: Compra) {
     this.fornecedorService.cancelarCompra(compra.id).subscribe(() => this.carregarCompras());
+  }
+
+  abrirDetalheCompra(compra: Compra) {
+    this.compraSelecionada.set(compra);
+  }
+
+  fecharDetalheCompra() {
+    this.compraSelecionada.set(null);
   }
 }

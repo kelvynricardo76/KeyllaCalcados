@@ -78,3 +78,46 @@
 
   input { width: 80px; }
 }
+
+.tabs-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.dre-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.dre-card {
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  padding: 18px 20px;
+  box-shadow: var(--shadow-card, none);
+
+  .kpi-label { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .kpi-value { font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin-bottom: 2px; }
+  .kpi-sub { font-size: 0.75rem; }
+
+  &.negativo .kpi-value { color: var(--danger-color, #dc2626); }
+  &.positivo .kpi-value { color: var(--success-color, #16a34a); }
+
+  &.destaque {
+    border-color: var(--brand-blue, var(--primary-color));
+    .kpi-value { color: var(--brand-blue, var(--primary-color)); }
+  }
+
+  &.principal {
+    background: var(--brand-blue, var(--primary-color));
+    border-color: transparent;
+    .kpi-label, .kpi-sub { color: rgba(255,255,255,0.8); }
+    .kpi-value { color: #fff; }
+  }
+}
+
+.dre-nota {
+  font-size: 0.8rem;
+}

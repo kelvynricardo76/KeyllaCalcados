@@ -32,3 +32,28 @@
   border-radius: var(--border-radius-md);
   font-size: 0.875rem;
 }
+
+.tabs-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.linha-clicavel {
+  cursor: pointer;
+  transition: background 0.15s ease;
+  &:hover { background: var(--surface-bg); }
+}
+
+.section-title {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  margin: 16px 0 8px;
+}
+
+.detalhe-devolucao-info {
+  margin-bottom: 16px;
+  p { margin: 4px 0; font-size: 0.9rem; }
+}

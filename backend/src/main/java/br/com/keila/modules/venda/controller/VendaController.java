@@ -1,6 +1,7 @@
 package br.com.keila.modules.venda.controller;
 
 import br.com.keila.modules.venda.dto.*;
+import br.com.keila.modules.venda.service.DevolucaoService;
 import br.com.keila.modules.venda.service.VendaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -15,10 +16,16 @@ import java.util.List;
 public class VendaController {
 
     private final VendaService vendaService;
+    private final DevolucaoService devolucaoService;
 
     @GetMapping
     public List<VendaResponse> listarPorSessao(@RequestParam Long sessaoId) {
         return vendaService.listarPorSessao(sessaoId);
+    }
+
+    @GetMapping("/devolucoes")
+    public List<DevolucaoResponse> listarTodasDevolucoes() {
+        return devolucaoService.listarTodas();
     }
 
     @GetMapping("/{id}")

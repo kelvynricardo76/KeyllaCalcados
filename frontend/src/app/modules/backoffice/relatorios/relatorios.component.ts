@@ -2,7 +2,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RelatorioService } from './relatorio.service';
-import { ProdutoParado, ProdutoVencendo, RelatorioVendas } from './relatorio.model';
+import { ProdutoParado, ProdutoVencendo, RelatorioFinanceiro, RelatorioVendas } from './relatorio.model';
 
 function formatarData(d: Date): string {
   return d.toISOString().substring(0, 10);
@@ -18,6 +18,8 @@ function formatarData(d: Date): string {
 export class RelatoriosComponent implements OnInit {
   private relatorioService = inject(RelatorioService);
 
+  aba = signal<'VENDAS' | 'FINANCEIRO'>('VENDAS');
+
   loading = signal(true);
   error = signal('');
   relatorio = signal<RelatorioVendas | null>(null);
@@ -28,6 +30,9 @@ export class RelatoriosComponent implements OnInit {
   parados = signal<ProdutoParado[]>([]);
   diasParados = signal(60);
   paradosLoading = signal(false);
+
+  financeiro = signal<RelatorioFinanceiro | null>(null);
+  financeiroLoading = signal(false);
 
   alertaVencendoCount = computed(() => this.vencendo().length);
   alertaVencidoCount = computed(() => this.vencendo().filter(v => v.vencido).length);
@@ -46,6 +51,7 @@ export class RelatoriosComponent implements OnInit {
     this.buscar();
     this.buscarVencendo();
     this.buscarParados();
+    this.buscarFinanceiro();
   }
 
   buscar() {
@@ -55,6 +61,7 @@ export class RelatoriosComponent implements OnInit {
       next: r => { this.relatorio.set(r); this.loading.set(false); },
       error: () => { this.error.set('Não foi possível carregar o relatório.'); this.loading.set(false); }
     });
+    this.buscarFinanceiro();
   }
 
   buscarVencendo() {
@@ -66,6 +73,14 @@ export class RelatoriosComponent implements OnInit {
     this.relatorioService.produtosParados(this.diasParados()).subscribe({
       next: lista => { this.parados.set(lista); this.paradosLoading.set(false); },
       error: () => this.paradosLoading.set(false)
+    });
+  }
+
+  buscarFinanceiro() {
+    this.financeiroLoading.set(true);
+    this.relatorioService.financeiro(this.inicio, this.fim).subscribe({
+      next: r => { this.financeiro.set(r); this.financeiroLoading.set(false); },
+      error: () => this.financeiroLoading.set(false)
     });
   }
 }

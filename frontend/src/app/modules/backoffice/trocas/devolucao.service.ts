@@ -11,6 +11,10 @@ export class DevolucaoService {
     return this.http.get<Devolucao[]>(`${environment.apiUrl}/vendas/${vendaId}/devolucoes`);
   }
 
+  listarTodas() {
+    return this.http.get<Devolucao[]>(`${environment.apiUrl}/vendas/devolucoes`);
+  }
+
   registrar(vendaId: number, request: DevolucaoRequest) {
     return this.http.post<Devolucao>(`${environment.apiUrl}/vendas/${vendaId}/devolucoes`, request);
   }

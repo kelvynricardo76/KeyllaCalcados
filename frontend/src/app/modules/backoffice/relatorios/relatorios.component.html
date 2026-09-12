@@ -17,6 +17,13 @@
     </div>
   }
 
+  <div class="tabs-row">
+    <button class="btn btn-sm" [class.btn-primary]="aba() === 'VENDAS'" [class.btn-outline]="aba() !== 'VENDAS'"
+            (click)="aba.set('VENDAS')">Vendas &amp; Produtos</button>
+    <button class="btn btn-sm" [class.btn-primary]="aba() === 'FINANCEIRO'" [class.btn-outline]="aba() !== 'FINANCEIRO'"
+            (click)="aba.set('FINANCEIRO')">💰 Financeiro</button>
+  </div>
+
   <div class="card mb-3">
     <div class="card-body filtro-periodo">
       <div class="form-group">
@@ -30,6 +37,58 @@
       <button class="btn btn-primary" (click)="buscar()">Filtrar</button>
     </div>
   </div>
+
+  @if (aba() === 'FINANCEIRO') {
+    @if (financeiroLoading()) {
+      <p class="text-muted text-center">Carregando...</p>
+    } @else if (financeiro()) {
+      @let f = financeiro()!;
+      <div class="dre-grid">
+        <div class="dre-card">
+          <p class="kpi-label">Faturamento Bruto</p>
+          <p class="kpi-value">{{ f.faturamentoBruto | currency:'BRL' }}</p>
+          <p class="kpi-sub text-muted">{{ f.quantidadeVendas }} vendas · ticket médio {{ f.ticketMedio | currency:'BRL' }}</p>
+        </div>
+        <div class="dre-card negativo">
+          <p class="kpi-label">Descontos</p>
+          <p class="kpi-value">− {{ f.descontos | currency:'BRL' }}</p>
+        </div>
+        <div class="dre-card negativo">
+          <p class="kpi-label">Devoluções (reembolso)</p>
+          <p class="kpi-value">− {{ f.devolucoes | currency:'BRL' }}</p>
+        </div>
+        <div class="dre-card destaque">
+          <p class="kpi-label">Faturamento Líquido</p>
+          <p class="kpi-value">{{ f.faturamentoLiquido | currency:'BRL' }}</p>
+        </div>
+        <div class="dre-card negativo">
+          <p class="kpi-label">CMV (Custo da Mercadoria Vendida)</p>
+          <p class="kpi-value">− {{ f.cmv | currency:'BRL' }}</p>
+        </div>
+        <div class="dre-card destaque">
+          <p class="kpi-label">Lucro Bruto</p>
+          <p class="kpi-value">{{ f.lucroBruto | currency:'BRL' }}</p>
+          <p class="kpi-sub text-muted">margem {{ f.margemBruta | number:'1.1-1' }}%</p>
+        </div>
+        <div class="dre-card negativo">
+          <p class="kpi-label">Despesas de Caixa</p>
+          <p class="kpi-value">− {{ f.despesas | currency:'BRL' }}</p>
+        </div>
+        <div class="dre-card positivo">
+          <p class="kpi-label">Receitas Avulsas</p>
+          <p class="kpi-value">+ {{ f.receitasAvulsas | currency:'BRL' }}</p>
+        </div>
+        <div class="dre-card destaque principal">
+          <p class="kpi-label">Lucro Líquido</p>
+          <p class="kpi-value">{{ f.lucroLiquido | currency:'BRL' }}</p>
+          <p class="kpi-sub text-muted">margem {{ f.margemLiquida | number:'1.1-1' }}%</p>
+        </div>
+      </div>
+      <p class="text-muted mt-2 dre-nota">
+        💡 O CMV usa o preço de custo atual de cada produto (não há histórico de custo por venda), então é uma aproximação para acompanhamento gerencial.
+      </p>
+    }
+  } @else {
 
   @if (loading()) {
     <p class="text-muted text-center">Carregando...</p>
@@ -207,4 +266,6 @@
       </table>
     </div>
   </div>
+
+  }
 </div>

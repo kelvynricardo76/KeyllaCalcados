@@ -1,10 +1,11 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PdvService } from '../../pdv/pdv.service';
 import { Venda } from '../../pdv/pdv.model';
 import { DevolucaoService } from './devolucao.service';
 import { Devolucao, TipoDevolucao } from './devolucao.model';
+import { ModalComponent } from '../../../shared/components/modal/modal.component';
 
 interface LinhaDevolucao {
   variacaoId: number;
@@ -18,18 +19,24 @@ interface LinhaDevolucao {
 @Component({
   selector: 'app-trocas',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ModalComponent],
   templateUrl: './trocas.component.html',
   styleUrl: './trocas.component.scss'
 })
-export class TrocasComponent {
+export class TrocasComponent implements OnInit {
   private pdvService = inject(PdvService);
   private devolucaoService = inject(DevolucaoService);
+
+  aba = signal<'REGISTRAR' | 'HISTORICO'>('REGISTRAR');
 
   vendaId: number | null = null;
   venda = signal<Venda | null>(null);
   linhas = signal<LinhaDevolucao[]>([]);
   historico = signal<Devolucao[]>([]);
+
+  todasDevolucoes = signal<Devolucao[]>([]);
+  todasLoading = signal(true);
+  devolucaoSelecionada = signal<Devolucao | null>(null);
 
   tipo: TipoDevolucao = 'TROCA';
   motivo = '';
@@ -38,6 +45,26 @@ export class TrocasComponent {
   saving = signal(false);
   error = signal('');
   sucesso = signal('');
+
+  ngOnInit() {
+    this.carregarTodas();
+  }
+
+  private carregarTodas() {
+    this.todasLoading.set(true);
+    this.devolucaoService.listarTodas().subscribe({
+      next: lista => { this.todasDevolucoes.set(lista); this.todasLoading.set(false); },
+      error: () => this.todasLoading.set(false)
+    });
+  }
+
+  abrirDetalheDevolucao(d: Devolucao) {
+    this.devolucaoSelecionada.set(d);
+  }
+
+  fecharDetalheDevolucao() {
+    this.devolucaoSelecionada.set(null);
+  }
 
   buscarVenda() {
     if (!this.vendaId) return;
@@ -113,6 +140,7 @@ export class TrocasComponent {
         this.motivo = '';
         this.linhas.update(lista => lista.map(l => ({ ...l, quantidadeDevolver: 0 })));
         this.carregarHistorico(venda.id);
+        this.carregarTodas();
       },
       error: err => {
         this.saving.set(false);

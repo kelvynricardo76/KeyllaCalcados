@@ -1,5 +1,8 @@
 package br.com.keila.modules.relatorio.service;
 
+import br.com.keila.modules.caixa.model.MovimentacaoCaixa;
+import br.com.keila.modules.caixa.model.TipoMovCaixa;
+import br.com.keila.modules.caixa.repository.MovimentacaoCaixaRepository;
 import br.com.keila.modules.cliente.model.Cliente;
 import br.com.keila.modules.estoque.model.Estoque;
 import br.com.keila.modules.estoque.repository.EstoqueRepository;
@@ -17,12 +20,15 @@ import br.com.keila.modules.relatorio.dto.PontoVendaHora;
 import br.com.keila.modules.relatorio.dto.ProdutoParadoResponse;
 import br.com.keila.modules.relatorio.dto.ProdutoRankingResponse;
 import br.com.keila.modules.relatorio.dto.ProdutoVencendoResponse;
+import br.com.keila.modules.relatorio.dto.RelatorioFinanceiroResponse;
 import br.com.keila.modules.relatorio.dto.RelatorioVendasResponse;
 import br.com.keila.modules.relatorio.dto.VendaDetalheResponse;
 import br.com.keila.modules.relatorio.dto.VendaResumoResponse;
 import br.com.keila.modules.usuario.model.Usuario;
 import br.com.keila.modules.venda.model.StatusVenda;
+import br.com.keila.modules.venda.model.TipoDevolucao;
 import br.com.keila.modules.venda.model.Venda;
+import br.com.keila.modules.venda.repository.DevolucaoRepository;
 import br.com.keila.modules.venda.repository.ItemVendaRepository;
 import br.com.keila.modules.venda.repository.VendaRepository;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +40,7 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -54,6 +61,8 @@ public class RelatorioService {
     private final FiadoRepository fiadoRepository;
     private final EstoqueRepository estoqueRepository;
     private final ItemVendaRepository itemVendaRepository;
+    private final DevolucaoRepository devolucaoRepository;
+    private final MovimentacaoCaixaRepository movimentacaoCaixaRepository;
     private final ProdutoRepository produtoRepository;
 
     public DashboardResponse dashboard() {
@@ -184,6 +193,63 @@ public class RelatorioService {
                 })
                 .sorted(Comparator.comparing(ClienteRankingResponse::valorTotal).reversed())
                 .toList();
+    }
+
+    /**
+     * Demonstrativo financeiro simplificado do período: do faturamento bruto ao lucro líquido.
+     * CMV usa o preço de custo ATUAL do produto (não há snapshot histórico de custo por venda),
+     * então é uma aproximação — suficiente para acompanhamento gerencial do dia a dia.
+     */
+    public RelatorioFinanceiroResponse relatorioFinanceiro(LocalDate inicio, LocalDate fim) {
+        Instant inicioTs = inicio.atStartOfDay(ZONE).toInstant();
+        Instant fimTs = fim.atTime(LocalTime.MAX).atZone(ZONE).toInstant();
+        OffsetDateTime inicioOd = inicio.atStartOfDay(ZONE).toOffsetDateTime();
+        OffsetDateTime fimOd = fim.atTime(LocalTime.MAX).atZone(ZONE).toOffsetDateTime();
+
+        List<Venda> vendas = vendaRepository.findByStatusAndCreatedAtBetween(StatusVenda.FECHADA, inicioTs, fimTs);
+
+        BigDecimal faturamentoBruto = vendas.stream().map(Venda::getSubtotal).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal descontos = vendas.stream().map(Venda::getDescontoGeral).reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal cmv = vendas.stream()
+                .flatMap(v -> v.getItens().stream())
+                .map(i -> i.getProduto().getPrecoCusto().multiply(BigDecimal.valueOf(i.getQuantidade())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal devolucoes = devolucaoRepository.findByCreatedAtBetween(inicioOd, fimOd).stream()
+                .filter(d -> d.getTipo() == TipoDevolucao.DEVOLUCAO)
+                .map(d -> d.getValorDevolvido())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal faturamentoLiquido = faturamentoBruto.subtract(descontos).subtract(devolucoes);
+        BigDecimal lucroBruto = faturamentoLiquido.subtract(cmv);
+        BigDecimal margemBruta = margemPercentual(lucroBruto, faturamentoLiquido);
+
+        List<MovimentacaoCaixa> movimentacoes = movimentacaoCaixaRepository.findByCreatedAtBetween(inicioOd, fimOd);
+        BigDecimal despesas = movimentacoes.stream()
+                .filter(m -> m.getTipo() == TipoMovCaixa.DESPESA)
+                .map(MovimentacaoCaixa::getValor)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal receitasAvulsas = movimentacoes.stream()
+                .filter(m -> m.getTipo() == TipoMovCaixa.RECEITA_AVULSA)
+                .map(MovimentacaoCaixa::getValor)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal lucroLiquido = lucroBruto.add(receitasAvulsas).subtract(despesas);
+        BigDecimal margemLiquida = margemPercentual(lucroLiquido, faturamentoLiquido);
+
+        BigDecimal ticketMedio = vendas.isEmpty()
+                ? BigDecimal.ZERO
+                : faturamentoBruto.divide(BigDecimal.valueOf(vendas.size()), 2, RoundingMode.HALF_UP);
+
+        return new RelatorioFinanceiroResponse(inicio, fim, vendas.size(), ticketMedio,
+                faturamentoBruto, descontos, devolucoes, faturamentoLiquido, cmv, lucroBruto, margemBruta,
+                despesas, receitasAvulsas, lucroLiquido, margemLiquida);
+    }
+
+    private BigDecimal margemPercentual(BigDecimal valor, BigDecimal base) {
+        if (base.compareTo(BigDecimal.ZERO) <= 0) return BigDecimal.ZERO;
+        return valor.divide(base, 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100));
     }
 
     /** Produtos ativos, com estoque disponível, sem venda há pelo menos `dias` dias (ou nunca vendidos). */

@@ -62,7 +62,7 @@
             <tr><td colspan="6" class="text-center text-muted">Nenhuma compra registrada.</td></tr>
           }
           @for (c of compras(); track c.id) {
-            <tr>
+            <tr class="linha-clicavel" (click)="abrirDetalheCompra(c)">
               <td>{{ c.dataCompra | date:'dd/MM/yyyy' }}</td>
               <td>{{ c.fornecedorNome ?? '—' }}</td>
               <td>{{ c.numeroNf ?? '—' }}</td>
@@ -76,9 +76,10 @@
                 </span>
               </td>
               <td class="d-flex gap-1">
+                <button class="btn btn-outline btn-sm" (click)="abrirDetalheCompra(c); $event.stopPropagation()">Ver itens</button>
                 @if (c.status === 'PENDENTE') {
-                  <button class="btn btn-success btn-sm" (click)="receberCompra(c)">Receber</button>
-                  <button class="btn btn-outline btn-sm" (click)="cancelarCompra(c)">Cancelar</button>
+                  <button class="btn btn-success btn-sm" (click)="receberCompra(c); $event.stopPropagation()">Receber</button>
+                  <button class="btn btn-outline btn-sm" (click)="cancelarCompra(c); $event.stopPropagation()">Cancelar</button>
                 }
               </td>
             </tr>
@@ -223,6 +224,47 @@
         <button type="button" class="btn btn-primary" [disabled]="saving()" (click)="salvarCompra()">
           {{ saving() ? 'Salvando...' : 'Registrar Compra' }}
         </button>
+      </div>
+    </app-modal>
+  }
+
+  <!-- ── Modal: detalhe da compra ──────────────────────────────────── -->
+  @if (compraSelecionada(); as c) {
+    <app-modal [titulo]="'Compra #' + c.id" (fechar)="fecharDetalheCompra()">
+      <div class="detalhe-compra-info">
+        <p><strong>Fornecedor:</strong> {{ c.fornecedorNome ?? '—' }}</p>
+        <p><strong>Data da Compra:</strong> {{ c.dataCompra | date:'dd/MM/yyyy' }}</p>
+        @if (c.dataEntrega) { <p><strong>Data de Entrega:</strong> {{ c.dataEntrega | date:'dd/MM/yyyy' }}</p> }
+        <p><strong>Número da NF:</strong> {{ c.numeroNf ?? '—' }}</p>
+        <p><strong>Status:</strong> {{ c.status }}</p>
+        @if (c.observacoes) { <p><strong>Observações:</strong> {{ c.observacoes }}</p> }
+      </div>
+
+      <h4 class="section-title">Itens</h4>
+      <div class="table-container mb-2">
+        <table class="data-table">
+          <thead><tr><th>Produto</th><th>Tamanho</th><th>Cor</th><th>SKU</th><th>Qtd.</th><th>Recebido</th><th>Custo Unit.</th><th>Subtotal</th></tr></thead>
+          <tbody>
+            @for (item of c.itens; track item.id) {
+              <tr>
+                <td>{{ item.produtoNome }}</td>
+                <td>{{ item.tamanhoValor ?? '—' }}</td>
+                <td>{{ item.corNome ?? '—' }}</td>
+                <td>{{ item.sku ?? '—' }}</td>
+                <td>{{ item.quantidade }}</td>
+                <td>{{ item.quantidadeRecebida }}</td>
+                <td>{{ item.precoCustoUnitario | currency:'BRL' }}</td>
+                <td>{{ item.subtotal | currency:'BRL' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <p class="text-right"><strong>Total da Compra: {{ c.valorTotal | currency:'BRL' }}</strong></p>
+
+      <div modal-footer>
+        <button type="button" class="btn btn-outline" (click)="fecharDetalheCompra()">Fechar</button>
       </div>
     </app-modal>
   }

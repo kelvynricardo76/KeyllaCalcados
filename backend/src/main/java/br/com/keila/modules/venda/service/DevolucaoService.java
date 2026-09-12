@@ -1,10 +1,13 @@
 package br.com.keila.modules.venda.service;
 
+import br.com.keila.modules.estoque.model.MovimentacaoEstoque;
+import br.com.keila.modules.estoque.repository.MovimentacaoEstoqueRepository;
 import br.com.keila.modules.estoque.service.EstoqueService;
 import br.com.keila.modules.usuario.model.Usuario;
 import br.com.keila.modules.venda.dto.DevolucaoRequest;
 import br.com.keila.modules.venda.dto.DevolucaoResponse;
 import br.com.keila.modules.venda.dto.ItemDevolucaoRequest;
+import br.com.keila.modules.venda.dto.ItemDevolvidoResumo;
 import br.com.keila.modules.venda.model.Devolucao;
 import br.com.keila.modules.venda.model.ItemVenda;
 import br.com.keila.modules.venda.model.StatusVenda;
@@ -29,10 +32,18 @@ public class DevolucaoService {
     private final DevolucaoRepository devolucaoRepository;
     private final VendaRepository vendaRepository;
     private final EstoqueService estoqueService;
+    private final MovimentacaoEstoqueRepository movimentacaoEstoqueRepository;
 
     @Transactional(readOnly = true)
     public List<DevolucaoResponse> listarPorVenda(Long vendaId) {
         return devolucaoRepository.findByVendaOrigemIdOrderByCreatedAtDesc(vendaId).stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<DevolucaoResponse> listarTodas() {
+        return devolucaoRepository.findAllByOrderByCreatedAtDesc().stream()
                 .map(this::toResponse)
                 .toList();
     }
@@ -85,8 +96,23 @@ public class DevolucaoService {
     }
 
     private DevolucaoResponse toResponse(Devolucao d) {
+        List<ItemDevolvidoResumo> itens = movimentacaoEstoqueRepository
+                .findByReferenciaTipoAndReferenciaIdOrderByIdAsc("DEVOLUCAO", d.getId()).stream()
+                .map(this::toItemDevolvido)
+                .toList();
         return new DevolucaoResponse(
-                d.getId(), d.getVendaOrigem().getId(), d.getTipo(), d.getMotivo(), d.getValorDevolvido(),
-                d.getUsuario() != null ? d.getUsuario().getNome() : null, d.getCreatedAt());
+                d.getId(), d.getVendaOrigem().getId(),
+                d.getVendaOrigem().getCliente() != null ? d.getVendaOrigem().getCliente().getNome() : "Consumidor final",
+                d.getTipo(), d.getMotivo(), d.getValorDevolvido(),
+                d.getUsuario() != null ? d.getUsuario().getNome() : null, d.getCreatedAt(), itens);
+    }
+
+    private ItemDevolvidoResumo toItemDevolvido(MovimentacaoEstoque m) {
+        var variacao = m.getVariacao();
+        return new ItemDevolvidoResumo(
+                variacao.getProduto().getNome(),
+                variacao.getTamanho() != null ? variacao.getTamanho().getValor() : null,
+                variacao.getCor() != null ? variacao.getCor().getNome() : null,
+                m.getQuantidade());
     }
 }

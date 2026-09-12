@@ -2,102 +2,179 @@
 
   <div class="page-header">
     <h1>Trocas &amp; Devoluções</h1>
-    <p class="text-muted">Busque uma venda finalizada pelo número para registrar troca ou devolução de itens.</p>
+    <p class="text-muted">Registre trocas/devoluções de uma venda e acompanhe o histórico completo.</p>
   </div>
 
-  <div class="card mb-3">
-    <div class="card-body busca-venda">
-      <input type="number" class="form-control" placeholder="Número da venda (#)"
-             [(ngModel)]="vendaId" (keyup.enter)="buscarVenda()">
-      <button class="btn btn-primary" (click)="buscarVenda()">Buscar</button>
-    </div>
+  <div class="tabs-row">
+    <button class="btn btn-sm" [class.btn-primary]="aba() === 'REGISTRAR'" [class.btn-outline]="aba() !== 'REGISTRAR'"
+            (click)="aba.set('REGISTRAR')">Registrar</button>
+    <button class="btn btn-sm" [class.btn-primary]="aba() === 'HISTORICO'" [class.btn-outline]="aba() !== 'HISTORICO'"
+            (click)="aba.set('HISTORICO')">Histórico Geral</button>
   </div>
 
-  @if (loading()) {
-    <p class="text-muted text-center">Buscando...</p>
-  }
-
-  @if (error()) {
-    <div class="form-error mb-2">⚠ {{ error() }}</div>
-  }
-  @if (sucesso()) {
-    <div class="alert-success mb-2">✓ {{ sucesso() }}</div>
-  }
-
-  @if (venda(); as v) {
+  @if (aba() === 'REGISTRAR') {
     <div class="card mb-3">
-      <div class="card-header">
-        <h3>Venda #{{ v.id }} — {{ v.clienteNome ?? 'Consumidor final' }}</h3>
-        <span class="text-muted">{{ v.createdAt | date:'dd/MM/yyyy HH:mm' }} · Total {{ v.valorTotal | currency:'BRL' }}</span>
+      <div class="card-body busca-venda">
+        <input type="number" class="form-control" placeholder="Número da venda (#)"
+               [(ngModel)]="vendaId" (keyup.enter)="buscarVenda()">
+        <button class="btn btn-primary" (click)="buscarVenda()">Buscar</button>
       </div>
-      <div class="table-container">
-        <table class="data-table">
-          <thead><tr><th>Item</th><th>Vendido</th><th>Preço Unit.</th><th>Devolver</th></tr></thead>
-          <tbody>
-            @for (linha of linhas(); track linha.variacaoId) {
-              <tr>
-                <td>{{ linha.nomeProduto }} <span class="text-muted">{{ linha.tamanho }} {{ linha.cor }}</span></td>
-                <td>{{ linha.quantidadeVendida }}</td>
-                <td>{{ precoUnitario(linha.variacaoId) | currency:'BRL' }}</td>
+    </div>
+
+    @if (loading()) {
+      <p class="text-muted text-center">Buscando...</p>
+    }
+
+    @if (error()) {
+      <div class="form-error mb-2">⚠ {{ error() }}</div>
+    }
+    @if (sucesso()) {
+      <div class="alert-success mb-2">✓ {{ sucesso() }}</div>
+    }
+
+    @if (venda(); as v) {
+      <div class="card mb-3">
+        <div class="card-header">
+          <h3>Venda #{{ v.id }} — {{ v.clienteNome ?? 'Consumidor final' }}</h3>
+          <span class="text-muted">{{ v.createdAt | date:'dd/MM/yyyy HH:mm' }} · Total {{ v.valorTotal | currency:'BRL' }}</span>
+        </div>
+        <div class="table-container">
+          <table class="data-table">
+            <thead><tr><th>Item</th><th>Vendido</th><th>Preço Unit.</th><th>Devolver</th></tr></thead>
+            <tbody>
+              @for (linha of linhas(); track linha.variacaoId) {
+                <tr>
+                  <td>{{ linha.nomeProduto }} <span class="text-muted">{{ linha.tamanho }} {{ linha.cor }}</span></td>
+                  <td>{{ linha.quantidadeVendida }}</td>
+                  <td>{{ precoUnitario(linha.variacaoId) | currency:'BRL' }}</td>
+                  <td>
+                    <input type="number" min="0" [max]="linha.quantidadeVendida" class="form-control qty-input"
+                           [(ngModel)]="linha.quantidadeDevolver">
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Tipo</label>
+              <select class="form-control" [(ngModel)]="tipo">
+                <option value="TROCA">Troca</option>
+                <option value="DEVOLUCAO">Devolução (reembolso)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Valor a devolver</label>
+              <input class="form-control" [value]="totalDevolucao() | currency:'BRL'" disabled>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Motivo *</label>
+            <textarea class="form-control" rows="2" [(ngModel)]="motivo" placeholder="Ex.: numeração errada, defeito de fabricação..."></textarea>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-primary" [disabled]="saving()" (click)="confirmarDevolucao()">
+              {{ saving() ? 'Salvando...' : 'Confirmar ' + (tipo === 'TROCA' ? 'Troca' : 'Devolução') }}
+            </button>
+          </div>
+          @if (tipo === 'TROCA') {
+            <p class="text-muted mt-2">💡 Após confirmar, os itens voltam ao estoque. Para entregar o item novo, abra uma nova venda normalmente no PDV.</p>
+          }
+        </div>
+      </div>
+
+      @if (historico().length > 0) {
+        <div class="card">
+          <div class="card-header"><h3>Histórico desta venda</h3></div>
+          <div class="table-container">
+            <table class="data-table">
+              <thead><tr><th>Data</th><th>Tipo</th><th>Valor</th><th>Motivo</th><th>Usuário</th></tr></thead>
+              <tbody>
+                @for (h of historico(); track h.id) {
+                  <tr>
+                    <td>{{ h.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
+                    <td>{{ h.tipo }}</td>
+                    <td>{{ h.valorDevolvido | currency:'BRL' }}</td>
+                    <td>{{ h.motivo }}</td>
+                    <td>{{ h.usuarioNome ?? '—' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+    }
+  } @else {
+    <!-- ── Histórico geral de trocas/devoluções ─────────────────────── -->
+    <div class="table-container">
+      <table class="data-table">
+        <thead><tr><th>Data</th><th>Venda</th><th>Cliente</th><th>Tipo</th><th>Valor</th><th>Usuário</th><th></th></tr></thead>
+        <tbody>
+          @if (todasLoading()) {
+            <tr><td colspan="7" class="text-center text-muted">Carregando...</td></tr>
+          } @else if (todasDevolucoes().length === 0) {
+            <tr><td colspan="7" class="text-center text-muted">Nenhuma troca/devolução registrada ainda.</td></tr>
+          } @else {
+            @for (d of todasDevolucoes(); track d.id) {
+              <tr class="linha-clicavel" (click)="abrirDetalheDevolucao(d)">
+                <td>{{ d.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
+                <td>#{{ d.vendaOrigemId }}</td>
+                <td>{{ d.clienteNome }}</td>
                 <td>
-                  <input type="number" min="0" [max]="linha.quantidadeVendida" class="form-control qty-input"
-                         [(ngModel)]="linha.quantidadeDevolver">
+                  <span class="badge" [class.badge-warning]="d.tipo === 'TROCA'" [class.badge-danger]="d.tipo === 'DEVOLUCAO'">
+                    {{ d.tipo === 'TROCA' ? 'Troca' : 'Devolução' }}
+                  </span>
                 </td>
+                <td>{{ d.valorDevolvido | currency:'BRL' }}</td>
+                <td>{{ d.usuarioNome ?? '—' }}</td>
+                <td><button type="button" class="btn btn-outline btn-sm" (click)="abrirDetalheDevolucao(d); $event.stopPropagation()">Ver detalhes</button></td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- ── Modal: detalhe da troca/devolução ─────────────────────────── -->
+  @if (devolucaoSelecionada(); as d) {
+    <app-modal [titulo]="(d.tipo === 'TROCA' ? 'Troca' : 'Devolução') + ' — Venda #' + d.vendaOrigemId" (fechar)="fecharDetalheDevolucao()">
+      <div class="detalhe-devolucao-info">
+        <p><strong>Data:</strong> {{ d.createdAt | date:'dd/MM/yyyy HH:mm' }}</p>
+        <p><strong>Cliente:</strong> {{ d.clienteNome }}</p>
+        <p><strong>Registrado por:</strong> {{ d.usuarioNome ?? '—' }}</p>
+        <p><strong>Motivo:</strong> {{ d.motivo }}</p>
+      </div>
+
+      <h4 class="section-title">Itens devolvidos</h4>
+      <div class="table-container mb-2">
+        <table class="data-table">
+          <thead><tr><th>Produto</th><th>Tamanho</th><th>Cor</th><th>Qtd.</th></tr></thead>
+          <tbody>
+            @if (d.itens.length === 0) {
+              <tr><td colspan="4" class="text-center text-muted">Sem detalhamento de itens.</td></tr>
+            }
+            @for (item of d.itens; track $index) {
+              <tr>
+                <td>{{ item.nomeProduto }}</td>
+                <td>{{ item.tamanho ?? '—' }}</td>
+                <td>{{ item.cor ?? '—' }}</td>
+                <td>{{ item.quantidade }}</td>
               </tr>
             }
           </tbody>
         </table>
       </div>
 
-      <div class="card-body">
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Tipo</label>
-            <select class="form-control" [(ngModel)]="tipo">
-              <option value="TROCA">Troca</option>
-              <option value="DEVOLUCAO">Devolução (reembolso)</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Valor a devolver</label>
-            <input class="form-control" [value]="totalDevolucao() | currency:'BRL'" disabled>
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Motivo *</label>
-          <textarea class="form-control" rows="2" [(ngModel)]="motivo" placeholder="Ex.: numeração errada, defeito de fabricação..."></textarea>
-        </div>
-        <div class="form-actions">
-          <button class="btn btn-primary" [disabled]="saving()" (click)="confirmarDevolucao()">
-            {{ saving() ? 'Salvando...' : 'Confirmar ' + (tipo === 'TROCA' ? 'Troca' : 'Devolução') }}
-          </button>
-        </div>
-        @if (tipo === 'TROCA') {
-          <p class="text-muted mt-2">💡 Após confirmar, os itens voltam ao estoque. Para entregar o item novo, abra uma nova venda normalmente no PDV.</p>
-        }
-      </div>
-    </div>
+      <p class="text-right"><strong>Valor devolvido: {{ d.valorDevolvido | currency:'BRL' }}</strong></p>
 
-    @if (historico().length > 0) {
-      <div class="card">
-        <div class="card-header"><h3>Histórico desta venda</h3></div>
-        <div class="table-container">
-          <table class="data-table">
-            <thead><tr><th>Data</th><th>Tipo</th><th>Valor</th><th>Motivo</th><th>Usuário</th></tr></thead>
-            <tbody>
-              @for (h of historico(); track h.id) {
-                <tr>
-                  <td>{{ h.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
-                  <td>{{ h.tipo }}</td>
-                  <td>{{ h.valorDevolvido | currency:'BRL' }}</td>
-                  <td>{{ h.motivo }}</td>
-                  <td>{{ h.usuarioNome ?? '—' }}</td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
+      <div modal-footer>
+        <button type="button" class="btn btn-outline" (click)="fecharDetalheDevolucao()">Fechar</button>
       </div>
-    }
+    </app-modal>
   }
 </div>

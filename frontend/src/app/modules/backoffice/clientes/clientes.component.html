@@ -1,0 +1,170 @@
+<div class="clientes-page animate-fade-in">
+
+  <div class="page-header">
+    <div>
+      <h1>Clientes</h1>
+      <p class="text-muted">Cadastro de clientes, endereço e limite de fiado.</p>
+    </div>
+    <button class="btn btn-primary" id="btn-novo-cliente" (click)="abrirNovo()">+ Novo Cliente</button>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-body toolbar">
+      <input type="text" class="form-control" placeholder="Buscar por nome, CPF ou telefone..."
+             id="input-busca-cliente"
+             [value]="busca()" (input)="onBuscaChange($any($event.target).value)">
+    </div>
+  </div>
+
+  <div class="table-container">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>CPF/CNPJ</th>
+          <th>Telefone</th>
+          <th>Cidade/UF</th>
+          <th>Limite Fiado</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (loading()) {
+          <tr><td colspan="7" class="text-center text-muted">Carregando...</td></tr>
+        } @else if (clientes().length === 0) {
+          <tr><td colspan="7" class="text-center text-muted">Nenhum cliente encontrado.</td></tr>
+        } @else {
+          @for (cliente of clientes(); track cliente.id) {
+            <tr>
+              <td>{{ cliente.nome }}</td>
+              <td>{{ cliente.cpf ?? cliente.cnpj ?? '—' }}</td>
+              <td>{{ cliente.telefone ?? '—' }}</td>
+              <td>{{ cliente.cidade ? (cliente.cidade + '/' + (cliente.uf ?? '')) : '—' }}</td>
+              <td>{{ cliente.limiteFiado != null ? (cliente.limiteFiado | currency:'BRL') : '—' }}</td>
+              <td>
+                <span class="badge" [class.badge-success]="cliente.ativo" [class.badge-danger]="!cliente.ativo">
+                  {{ cliente.ativo ? 'Ativo' : 'Inativo' }}
+                </span>
+              </td>
+              <td class="d-flex gap-1">
+                <button class="btn btn-outline btn-sm" (click)="editar(cliente)">Editar</button>
+                <button class="btn btn-sm" [class.btn-danger]="cliente.ativo" [class.btn-success]="!cliente.ativo"
+                        (click)="toggleAtivo(cliente)">
+                  {{ cliente.ativo ? 'Desativar' : 'Ativar' }}
+                </button>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @if (showForm()) {
+    <div class="modal-overlay" (click)="fecharForm()">
+      <div class="modal-panel" (click)="$event.stopPropagation()">
+        <div class="card-header">
+          <h3>{{ editingId() ? 'Editar Cliente' : 'Novo Cliente' }}</h3>
+          <button class="btn btn-icon btn-outline" (click)="fecharForm()">✕</button>
+        </div>
+
+        <div class="card-body">
+          @if (error()) {
+            <div class="form-error mb-2">⚠ {{ error() }}</div>
+          }
+
+          <form [formGroup]="form" (ngSubmit)="salvar()">
+            <div class="form-group">
+              <label class="form-label">Nome *</label>
+              <input class="form-control" formControlName="nome" id="input-nome-cliente">
+              @if (nomeCtrl.invalid && nomeCtrl.touched) {
+                <span class="form-error">⚠ Informe o nome do cliente</span>
+              }
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">CPF</label>
+                <input class="form-control" formControlName="cpf" placeholder="000.000.000-00">
+              </div>
+              <div class="form-group">
+                <label class="form-label">CNPJ</label>
+                <input class="form-control" formControlName="cnpj" placeholder="00.000.000/0000-00">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Telefone</label>
+                <input class="form-control" formControlName="telefone" placeholder="(00) 00000-0000">
+              </div>
+              <div class="form-group">
+                <label class="form-label">E-mail</label>
+                <input class="form-control" type="email" formControlName="email">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Data de Nascimento</label>
+              <input class="form-control" type="date" formControlName="dataNascimento">
+            </div>
+
+            <h4 class="section-title">Endereço</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">CEP</label>
+                <input class="form-control" formControlName="cep">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Cidade</label>
+                <input class="form-control" formControlName="cidade">
+              </div>
+            </div>
+            <div class="form-row cols-3">
+              <div class="form-group">
+                <label class="form-label">Logradouro</label>
+                <input class="form-control" formControlName="logradouro">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Número</label>
+                <input class="form-control" formControlName="numero">
+              </div>
+              <div class="form-group">
+                <label class="form-label">UF</label>
+                <input class="form-control" formControlName="uf" maxlength="2">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Bairro</label>
+                <input class="form-control" formControlName="bairro">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Complemento</label>
+                <input class="form-control" formControlName="complemento">
+              </div>
+            </div>
+
+            <h4 class="section-title">Fiado</h4>
+            <div class="form-group">
+              <label class="form-label">Limite de Fiado</label>
+              <input class="form-control" type="number" step="0.01" min="0" formControlName="limiteFiado">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Observações</label>
+              <textarea class="form-control" rows="2" formControlName="observacoes"></textarea>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" class="btn btn-outline" (click)="fecharForm()">Cancelar</button>
+              <button type="submit" class="btn btn-primary" [disabled]="saving()" id="btn-salvar-cliente">
+                {{ saving() ? 'Salvando...' : 'Salvar' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  }
+</div>

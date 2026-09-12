@@ -1,0 +1,29 @@
+.page-header {
+  margin-bottom: 20px;
+  h1 { margin: 0; font-size: 1.6rem; }
+}
+
+.filtro-periodo {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  padding: 16px 20px !important;
+
+  .form-group { margin-bottom: 0; }
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.relatorio-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 900px) {
+  .relatorio-grid { grid-template-columns: 1fr; }
+}

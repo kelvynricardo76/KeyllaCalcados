@@ -1,0 +1,96 @@
+spring:
+  application:
+    name: keila-calcados-api
+
+  # ─── Banco de dados ───────────────────────────────────────────────
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/keila_calcados}
+    username: ${DB_USER:keila}
+    password: ${DB_PASS:keila123}
+    hikari:
+      maximum-pool-size: 20          # Suficiente para 3 caixas + backoffice
+      minimum-idle: 5
+      connection-timeout: 30000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate             # Flyway gerencia o schema; JPA só valida
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: public
+        format_sql: false
+    open-in-view: false              # Evita N+1 silencioso; lazy loading explícito
+
+  # ─── Flyway: migrações versionadas ────────────────────────────────
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  # ─── Redis: cache de catálogo e sessões ───────────────────────────
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 2000ms
+
+  # ─── Upload de arquivos ───────────────────────────────────────────
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 50MB
+
+  cache:
+    type: redis
+    redis:
+      time-to-live: 300000           # 5 minutos default para cache de produtos
+
+# ─── Configurações da aplicação ────────────────────────────────────
+app:
+  jwt:
+    secret: ${JWT_SECRET:keila-super-secret-jwt-key-2025-change-in-production}
+    expiration-ms: 86400000          # 24 horas
+    pin-expiration-ms: 28800000      # 8 horas (sessão de turno no caixa)
+
+  minio:
+    endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+    access-key: ${MINIO_ACCESS_KEY:minioadmin}
+    secret-key: ${MINIO_SECRET_KEY:minioadmin123}
+    bucket-produtos: ${MINIO_BUCKET:keila-produtos}
+    bucket-documentos: keila-documentos
+
+  pdv:
+    # Percentual máximo de desconto sem autorização de gerente
+    desconto-maximo-sem-autorizacao: 10
+    # Dias de validade padrão para orçamentos
+    orcamento-validade-dias: 7
+
+# ─── Actuator: health check e métricas ────────────────────────────
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# ─── OpenAPI / Swagger ────────────────────────────────────────────
+springdoc:
+  api-docs:
+    path: /api/v1/api-docs
+  swagger-ui:
+    path: /api/v1/swagger-ui
+    operations-sorter: alpha
+
+# ─── Logging ──────────────────────────────────────────────────────
+logging:
+  level:
+    root: INFO
+    br.com.keila: DEBUG
+    org.hibernate.SQL: WARN             # Ativar DEBUG para ver queries
+    org.springframework.security: WARN
+  pattern:
+    console: "%d{HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

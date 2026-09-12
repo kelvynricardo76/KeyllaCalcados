@@ -1,0 +1,165 @@
+<div class="estoque-page animate-fade-in">
+
+  <div class="page-header">
+    <div>
+      <h1>Estoque</h1>
+      <p class="text-muted">Saldo por variação e loja, com histórico completo de movimentações (kardex).</p>
+    </div>
+    <button class="btn btn-primary" id="btn-lancar-estoque" (click)="abrirLancamento()">+ Lançar Estoque</button>
+  </div>
+
+  <div class="table-container">
+    <table class="data-table grade-matrix">
+      <thead>
+        <tr>
+          <th>Produto</th>
+          <th>Tamanho</th>
+          <th>Cor</th>
+          <th>SKU</th>
+          <th>Loja</th>
+          <th>Quantidade</th>
+          <th>Mínimo</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (loading()) {
+          <tr><td colspan="9" class="text-center text-muted">Carregando...</td></tr>
+        } @else if (itens().length === 0) {
+          <tr><td colspan="9" class="text-center text-muted">Nenhum lançamento de estoque ainda.</td></tr>
+        } @else {
+          @for (item of itens(); track item.id) {
+            <tr>
+              <td>{{ item.produtoNome }}</td>
+              <td>{{ item.tamanhoValor ?? '—' }}</td>
+              <td>{{ item.corNome ?? '—' }}</td>
+              <td>{{ item.sku ?? '—' }}</td>
+              <td>{{ item.lojaNome }}</td>
+              <td class="grade-cell"
+                  [class.qty-zero]="item.statusEstoque === 'ZERADO'"
+                  [class.qty-low]="item.statusEstoque === 'BAIXO'"
+                  [class.qty-ok]="item.statusEstoque === 'OK'">
+                {{ item.quantidade }}
+              </td>
+              <td>{{ item.estoqueMinimo }}</td>
+              <td>
+                <span class="badge"
+                      [class.badge-danger]="item.statusEstoque === 'ZERADO'"
+                      [class.badge-warning]="item.statusEstoque === 'BAIXO'"
+                      [class.badge-success]="item.statusEstoque === 'OK'">
+                  {{ item.statusEstoque === 'ZERADO' ? 'Zerado' : item.statusEstoque === 'BAIXO' ? 'Baixo' : 'OK' }}
+                </span>
+              </td>
+              <td class="d-flex gap-1">
+                <button class="btn btn-outline btn-sm" (click)="ajustarLinha(item)">Ajustar</button>
+                <button class="btn btn-secondary btn-sm" (click)="verHistorico(item)">Histórico</button>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ── Modal: lançar/ajustar movimento ─────────────────────────── -->
+  @if (showAjuste()) {
+    <div class="modal-overlay" (click)="fecharAjuste()">
+      <div class="modal-panel" (click)="$event.stopPropagation()">
+        <div class="card-header">
+          <h3>Lançar Movimento de Estoque</h3>
+          <button class="btn btn-icon btn-outline" (click)="fecharAjuste()">✕</button>
+        </div>
+        <div class="card-body">
+          @if (error()) {
+            <div class="form-error mb-2">⚠ {{ error() }}</div>
+          }
+          <form [formGroup]="form" (ngSubmit)="salvarAjuste()">
+            <div class="form-group">
+              <label class="form-label">Produto / Variação *</label>
+              <select class="form-control" formControlName="variacaoId" id="select-variacao">
+                <option [ngValue]="null">Selecione...</option>
+                @for (v of variacoes(); track v.id) {
+                  <option [ngValue]="v.id">{{ descricaoVariacao(v) }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Loja *</label>
+                <select class="form-control" formControlName="lojaId">
+                  @for (loja of lojas(); track loja.id) {
+                    <option [ngValue]="loja.id">{{ loja.nome }}</option>
+                  }
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Tipo *</label>
+                <select class="form-control" formControlName="tipo">
+                  @for (t of tiposMovimento; track t.valor) {
+                    <option [value]="t.valor">{{ t.label }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Quantidade *</label>
+              <input type="number" min="1" class="form-control" formControlName="quantidade">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Motivo</label>
+              <textarea class="form-control" rows="2" formControlName="motivo"
+                        placeholder="Ex.: recebimento NF 1234, inventário mensal..."></textarea>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" class="btn btn-outline" (click)="fecharAjuste()">Cancelar</button>
+              <button type="submit" class="btn btn-primary" [disabled]="saving()" id="btn-confirmar-ajuste">
+                {{ saving() ? 'Salvando...' : 'Confirmar' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ── Modal: histórico ─────────────────────────────────────────── -->
+  @if (showHistorico()) {
+    <div class="modal-overlay" (click)="fecharHistorico()">
+      <div class="modal-panel" (click)="$event.stopPropagation()">
+        <div class="card-header">
+          <h3>Histórico — {{ historicoTitulo() }}</h3>
+          <button class="btn btn-icon btn-outline" (click)="fecharHistorico()">✕</button>
+        </div>
+        <div class="card-body">
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr><th>Data</th><th>Tipo</th><th>Qtd.</th><th>Antes → Depois</th><th>Usuário</th><th>Motivo</th></tr>
+              </thead>
+              <tbody>
+                @if (movimentacoes().length === 0) {
+                  <tr><td colspan="6" class="text-center text-muted">Sem movimentações registradas.</td></tr>
+                }
+                @for (m of movimentacoes(); track m.id) {
+                  <tr>
+                    <td>{{ m.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
+                    <td>{{ m.tipo }}</td>
+                    <td>{{ m.quantidade }}</td>
+                    <td>{{ m.quantidadeAnterior }} → {{ m.quantidadePosterior }}</td>
+                    <td>{{ m.usuarioNome ?? '—' }}</td>
+                    <td>{{ m.motivo ?? '—' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

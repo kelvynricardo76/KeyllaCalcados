@@ -1,0 +1,93 @@
+<div class="dashboard-page animate-fade-in">
+
+  <!-- ── Cabeçalho ────────────────────────────────────────── -->
+  <div class="page-header">
+    <div>
+      <h1>Dashboard</h1>
+      <p class="text-muted">{{ currentDate | date:'EEEE, d \'de\' MMMM \'de\' yyyy':'':'pt-BR' }}</p>
+    </div>
+    <a routerLink="/pdv" class="btn btn-primary" id="btn-dashboard-pdv">
+      🏪 Ir para o PDV
+    </a>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-grid">
+      @for (i of [1,2,3,4]; track i) {
+        <div class="skeleton-card"></div>
+      }
+    </div>
+  } @else if (kpis()) {
+    <!-- ── KPIs principais ──────────────────────────────── -->
+    <div class="kpi-grid">
+
+      <div class="kpi-card" id="kpi-faturamento">
+        <div class="kpi-icon">💰</div>
+        <p class="kpi-label">Faturamento Hoje</p>
+        <p class="kpi-value">{{ kpis()!.faturamentoHoje | currency:'BRL':'symbol':'1.2-2' }}</p>
+        <div class="kpi-change" [class.positive]="variacaoFaturamento >= 0" [class.negative]="variacaoFaturamento < 0">
+          {{ variacaoFaturamento >= 0 ? '▲' : '▼' }}
+          {{ variacaoFaturamento | number:'1.1-1' }}% vs ontem
+        </div>
+      </div>
+
+      <div class="kpi-card" id="kpi-vendas">
+        <div class="kpi-icon">🛍</div>
+        <p class="kpi-label">Vendas Hoje</p>
+        <p class="kpi-value">{{ kpis()!.vendasHoje }}</p>
+        <div class="kpi-change positive">vendas fechadas</div>
+      </div>
+
+      <div class="kpi-card" id="kpi-ticket">
+        <div class="kpi-icon">🎯</div>
+        <p class="kpi-label">Ticket Médio</p>
+        <p class="kpi-value">{{ kpis()!.ticketMedio | currency:'BRL':'symbol':'1.2-2' }}</p>
+        <div class="kpi-change positive">por venda</div>
+      </div>
+
+      <div class="kpi-card" [class.alert]="kpis()!.fiadosVencidos > 0" id="kpi-fiado">
+        <div class="kpi-icon">📋</div>
+        <p class="kpi-label">Fiados em Aberto</p>
+        <p class="kpi-value">{{ kpis()!.fiadosEmAberto | currency:'BRL':'symbol':'1.2-2' }}</p>
+        @if (kpis()!.fiadosVencidos > 0) {
+          <div class="kpi-change negative">⚠ {{ kpis()!.fiadosVencidos }} vencidos</div>
+        } @else {
+          <div class="kpi-change positive">✓ Nenhum vencido</div>
+        }
+      </div>
+
+    </div>
+
+    <!-- ── Alertas ──────────────────────────────────────── -->
+    @if (kpis()!.estoqueBaixo > 0) {
+      <div class="alert-banner">
+        <span>📦</span>
+        <strong>{{ kpis()!.estoqueBaixo }} variações</strong> estão abaixo do estoque mínimo.
+        <a routerLink="/backoffice/estoque" class="alert-link">Ver estoque →</a>
+      </div>
+    }
+
+    <!-- ── Vendas por hora (mini gráfico) ──────────────── -->
+    <div class="card mt-3">
+      <div class="card-header">
+        <h3>📈 Vendas por Hora — Hoje</h3>
+      </div>
+      <div class="card-body">
+        <div class="bar-chart">
+          @for (item of kpis()!.vendasPorHora; track item.hora) {
+            <div class="bar-item">
+              <div class="bar-track">
+                <div class="bar-fill"
+                     [style.height.%]="getBarHeight(item.valor)"
+                     [title]="item.valor | currency:'BRL'">
+                </div>
+              </div>
+              <span class="bar-label">{{ item.hora }}</span>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+  }
+</div>

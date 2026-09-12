@@ -1,0 +1,85 @@
+<div class="app-shell" [class.sidebar-collapsed]="sidebarCollapsed()">
+
+  <!-- ════════════════════════════════════════
+       SIDEBAR
+  ═════════════════════════════════════════ -->
+  <aside class="sidebar">
+
+    <!-- Logo / Brand -->
+    <div class="sidebar-brand">
+      <div class="brand-logo-wrap">
+        <img src="assets/images/logo.png" alt="Keylla" class="sidebar-logo"
+             onerror="this.style.display='none'">
+        <div class="brand-text" [class.hidden]="sidebarCollapsed()">
+          <span class="brand-name">Keylla</span>
+          <span class="brand-sub">Calçados</span>
+        </div>
+      </div>
+      <button class="collapse-btn" (click)="toggleSidebar()"
+              [attr.aria-label]="sidebarCollapsed() ? 'Expandir menu' : 'Recolher menu'"
+              id="btn-toggle-sidebar">
+        {{ sidebarCollapsed() ? '›' : '‹' }}
+      </button>
+    </div>
+
+    <!-- Usuário logado -->
+    <div class="sidebar-user" [class.collapsed]="sidebarCollapsed()">
+      <div class="user-avatar">
+        {{ auth.user()?.nome?.charAt(0)?.toUpperCase() }}
+      </div>
+      <div class="user-info" [class.hidden]="sidebarCollapsed()">
+        <span class="user-name">{{ auth.user()?.nome }}</span>
+        <span class="user-role badge badge-primary">{{ auth.user()?.perfil }}</span>
+      </div>
+    </div>
+
+    <!-- Nav items -->
+    <nav class="sidebar-nav">
+      @for (item of visibleNavItems(); track item.route) {
+        <a [routerLink]="item.route" routerLinkActive="active"
+           class="nav-item" [title]="item.label"
+           [id]="'nav-' + item.label.toLowerCase().replace(' ', '-')">
+          <span class="nav-icon">{{ item.icon }}</span>
+          <span class="nav-label" [class.hidden]="sidebarCollapsed()">{{ item.label }}</span>
+        </a>
+      }
+    </nav>
+
+    <!-- Logout -->
+    <button class="sidebar-logout" (click)="auth.logout()" id="btn-logout"
+            [title]="sidebarCollapsed() ? 'Sair' : ''">
+      <span class="nav-icon">🚪</span>
+      <span class="nav-label" [class.hidden]="sidebarCollapsed()">Sair</span>
+    </button>
+  </aside>
+
+  <!-- ════════════════════════════════════════
+       MAIN CONTENT
+  ═════════════════════════════════════════ -->
+  <div class="main-wrapper">
+
+    <!-- Header -->
+    <header class="main-header">
+      <div class="header-left">
+        <!-- Breadcrumb dinâmico via router -->
+        <h2 class="page-title">Gestão</h2>
+      </div>
+      <div class="header-right">
+        <!-- Indicador de data/hora -->
+        <div class="header-datetime">
+          <span class="material-icon">🕐</span>
+          <span class="datetime-text">{{ currentYear }}</span>
+        </div>
+        <!-- Botão PDV rápido -->
+        <a routerLink="/pdv" class="btn btn-primary btn-sm" id="btn-goto-pdv">
+          🏪 Abrir PDV
+        </a>
+      </div>
+    </header>
+
+    <!-- Conteúdo da página (router outlet) -->
+    <main class="main-content">
+      <router-outlet />
+    </main>
+  </div>
+</div>

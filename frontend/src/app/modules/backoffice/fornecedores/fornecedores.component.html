@@ -1,0 +1,244 @@
+<div class="fornecedores-page animate-fade-in">
+
+  <div class="page-header">
+    <div>
+      <h1>Fornecedores &amp; Compras</h1>
+      <p class="text-muted">Cadastro de fornecedores e entradas de mercadoria.</p>
+    </div>
+    @if (aba() === 'FORNECEDORES') {
+      <button class="btn btn-primary" (click)="abrirNovoFornecedor()">+ Novo Fornecedor</button>
+    } @else {
+      <button class="btn btn-primary" (click)="abrirNovaCompra()">+ Nova Compra</button>
+    }
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-body toolbar">
+      <button class="btn btn-sm" [class.btn-primary]="aba() === 'FORNECEDORES'" [class.btn-outline]="aba() !== 'FORNECEDORES'"
+              (click)="aba.set('FORNECEDORES')">Fornecedores</button>
+      <button class="btn btn-sm" [class.btn-primary]="aba() === 'COMPRAS'" [class.btn-outline]="aba() !== 'COMPRAS'"
+              (click)="aba.set('COMPRAS')">Compras</button>
+    </div>
+  </div>
+
+  @if (aba() === 'FORNECEDORES') {
+    <div class="table-container">
+      <table class="data-table">
+        <thead><tr><th>Razão Social</th><th>CNPJ</th><th>Telefone</th><th>Contato</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          @if (loading()) {
+            <tr><td colspan="6" class="text-center text-muted">Carregando...</td></tr>
+          } @else if (fornecedores().length === 0) {
+            <tr><td colspan="6" class="text-center text-muted">Nenhum fornecedor cadastrado.</td></tr>
+          } @else {
+            @for (f of fornecedores(); track f.id) {
+              <tr>
+                <td>{{ f.razaoSocial }}</td>
+                <td>{{ f.cnpj ?? '—' }}</td>
+                <td>{{ f.telefone ?? '—' }}</td>
+                <td>{{ f.contato ?? '—' }}</td>
+                <td>
+                  <span class="badge" [class.badge-success]="f.ativo" [class.badge-danger]="!f.ativo">
+                    {{ f.ativo ? 'Ativo' : 'Inativo' }}
+                  </span>
+                </td>
+                <td class="d-flex gap-1">
+                  <button class="btn btn-outline btn-sm" (click)="editarFornecedor(f)">Editar</button>
+                  <button class="btn btn-sm" [class.btn-danger]="f.ativo" [class.btn-success]="!f.ativo"
+                          (click)="toggleAtivoFornecedor(f)">{{ f.ativo ? 'Desativar' : 'Ativar' }}</button>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  } @else {
+    <div class="table-container">
+      <table class="data-table">
+        <thead><tr><th>Data</th><th>Fornecedor</th><th>NF</th><th>Valor</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          @if (compras().length === 0) {
+            <tr><td colspan="6" class="text-center text-muted">Nenhuma compra registrada.</td></tr>
+          }
+          @for (c of compras(); track c.id) {
+            <tr>
+              <td>{{ c.dataCompra | date:'dd/MM/yyyy' }}</td>
+              <td>{{ c.fornecedorNome ?? '—' }}</td>
+              <td>{{ c.numeroNf ?? '—' }}</td>
+              <td>{{ c.valorTotal | currency:'BRL' }}</td>
+              <td>
+                <span class="badge"
+                      [class.badge-warning]="c.status === 'PENDENTE'"
+                      [class.badge-success]="c.status === 'RECEBIDA'"
+                      [class.badge-danger]="c.status === 'CANCELADA'">
+                  {{ c.status }}
+                </span>
+              </td>
+              <td class="d-flex gap-1">
+                @if (c.status === 'PENDENTE') {
+                  <button class="btn btn-success btn-sm" (click)="receberCompra(c)">Receber</button>
+                  <button class="btn btn-outline btn-sm" (click)="cancelarCompra(c)">Cancelar</button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- ── Modal: fornecedor ─────────────────────────────────────────── -->
+  @if (showFornecedorForm()) {
+    <div class="modal-overlay" (click)="fecharFornecedorForm()">
+      <div class="modal-panel" (click)="$event.stopPropagation()">
+        <div class="card-header">
+          <h3>{{ editingFornecedorId() ? 'Editar Fornecedor' : 'Novo Fornecedor' }}</h3>
+          <button class="btn btn-icon btn-outline" (click)="fecharFornecedorForm()">✕</button>
+        </div>
+        <div class="card-body">
+          @if (error()) {
+            <div class="form-error mb-2">⚠ {{ error() }}</div>
+          }
+          <form [formGroup]="fornecedorForm" (ngSubmit)="salvarFornecedor()">
+            <div class="form-group">
+              <label class="form-label">Razão Social *</label>
+              <input class="form-control" formControlName="razaoSocial">
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">CNPJ</label>
+                <input class="form-control" formControlName="cnpj">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Telefone</label>
+                <input class="form-control" formControlName="telefone">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">E-mail</label>
+                <input class="form-control" formControlName="email">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Contato</label>
+                <input class="form-control" formControlName="contato">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Endereço</label>
+              <input class="form-control" formControlName="endereco">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Observações</label>
+              <textarea class="form-control" rows="2" formControlName="observacoes"></textarea>
+            </div>
+            <div class="form-actions">
+              <button type="button" class="btn btn-outline" (click)="fecharFornecedorForm()">Cancelar</button>
+              <button type="submit" class="btn btn-primary" [disabled]="saving()">{{ saving() ? 'Salvando...' : 'Salvar' }}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ── Modal: nova compra ────────────────────────────────────────── -->
+  @if (showCompraForm()) {
+    <div class="modal-overlay" (click)="fecharCompraForm()">
+      <div class="modal-panel" (click)="$event.stopPropagation()">
+        <div class="card-header">
+          <h3>Nova Compra</h3>
+          <button class="btn btn-icon btn-outline" (click)="fecharCompraForm()">✕</button>
+        </div>
+        <div class="card-body">
+          @if (error()) {
+            <div class="form-error mb-2">⚠ {{ error() }}</div>
+          }
+          <form [formGroup]="compraForm">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Fornecedor</label>
+                <select class="form-control" formControlName="fornecedorId">
+                  <option [ngValue]="null">—</option>
+                  @for (f of fornecedores(); track f.id) {
+                    <option [ngValue]="f.id">{{ f.razaoSocial }}</option>
+                  }
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Loja *</label>
+                <select class="form-control" formControlName="lojaId">
+                  @for (l of lojas(); track l.id) {
+                    <option [ngValue]="l.id">{{ l.nome }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Número da NF</label>
+                <input class="form-control" formControlName="numeroNf">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Observações</label>
+                <input class="form-control" formControlName="observacoes">
+              </div>
+            </div>
+          </form>
+
+          <h4 class="section-title">Itens</h4>
+          <form [formGroup]="itemForm" (ngSubmit)="adicionarItemCompra()" class="form-row add-item-form">
+            <div class="form-group">
+              <label class="form-label">Produto / Variação</label>
+              <select class="form-control" formControlName="variacaoId">
+                <option [ngValue]="null">Selecione...</option>
+                @for (v of variacoes(); track v.id) {
+                  <option [ngValue]="v.id">{{ nomeVariacao(v.id) }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Qtd.</label>
+              <input type="number" min="1" class="form-control" formControlName="quantidade">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Custo Unit.</label>
+              <input type="number" step="0.01" min="0" class="form-control" formControlName="precoCustoUnitario">
+            </div>
+            <div class="form-group form-actions-inline">
+              <button type="submit" class="btn btn-secondary">+ Adicionar</button>
+            </div>
+          </form>
+
+          @if (itensCompra().length > 0) {
+            <div class="table-container mb-2">
+              <table class="data-table">
+                <thead><tr><th>Item</th><th>Qtd.</th><th>Custo Unit.</th><th>Subtotal</th><th></th></tr></thead>
+                <tbody>
+                  @for (item of itensCompra(); track $index) {
+                    <tr>
+                      <td>{{ nomeVariacao(item.variacaoId) }}</td>
+                      <td>{{ item.quantidade }}</td>
+                      <td>{{ item.precoCustoUnitario | currency:'BRL' }}</td>
+                      <td>{{ item.quantidade * item.precoCustoUnitario | currency:'BRL' }}</td>
+                      <td><button class="btn-remove" (click)="removerItemCompra($index)">✕</button></td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            <p class="text-right"><strong>Total: {{ totalCompra() | currency:'BRL' }}</strong></p>
+          }
+
+          <div class="form-actions">
+            <button type="button" class="btn btn-outline" (click)="fecharCompraForm()">Cancelar</button>
+            <button type="button" class="btn btn-primary" [disabled]="saving()" (click)="salvarCompra()">
+              {{ saving() ? 'Salvando...' : 'Registrar Compra' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

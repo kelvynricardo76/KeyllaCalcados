@@ -1,0 +1,229 @@
+<div class="produtos-page animate-fade-in">
+
+  <div class="page-header">
+    <div>
+      <h1>Produtos</h1>
+      <p class="text-muted">Catálogo, marcas, categorias e grade de variações (tamanho/cor).</p>
+    </div>
+    <button class="btn btn-primary" id="btn-novo-produto" (click)="abrirNovo()">+ Novo Produto</button>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-body toolbar">
+      <input type="text" class="form-control" placeholder="Buscar por nome ou SKU..."
+             id="input-busca-produto"
+             [value]="busca()" (input)="onBuscaChange($any($event.target).value)">
+    </div>
+  </div>
+
+  <div class="table-container">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Marca</th>
+          <th>Categoria</th>
+          <th>SKU</th>
+          <th>Custo</th>
+          <th>Venda</th>
+          <th>Margem</th>
+          <th>Grade</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (loading()) {
+          <tr><td colspan="10" class="text-center text-muted">Carregando...</td></tr>
+        } @else if (produtos().length === 0) {
+          <tr><td colspan="10" class="text-center text-muted">Nenhum produto encontrado.</td></tr>
+        } @else {
+          @for (produto of produtos(); track produto.id) {
+            <tr [id]="'produto-row-' + produto.id">
+              <td>{{ produto.nome }}</td>
+              <td>{{ produto.marcaNome ?? '—' }}</td>
+              <td>{{ produto.categoriaNome ?? '—' }}</td>
+              <td>{{ produto.sku ?? '—' }}</td>
+              <td>{{ produto.precoCusto | currency:'BRL' }}</td>
+              <td>{{ produto.precoVenda | currency:'BRL' }}</td>
+              <td>{{ produto.margemPercentual | number:'1.1-1' }}%</td>
+              <td>{{ produto.temGrade ? 'Sim' : 'Não' }}</td>
+              <td>
+                <span class="badge" [class.badge-success]="produto.ativo" [class.badge-danger]="!produto.ativo">
+                  {{ produto.ativo ? 'Ativo' : 'Inativo' }}
+                </span>
+              </td>
+              <td class="d-flex gap-1">
+                <button class="btn btn-outline btn-sm" (click)="editar(produto)">Editar</button>
+                <button class="btn btn-sm" [class.btn-danger]="produto.ativo" [class.btn-success]="!produto.ativo"
+                        (click)="toggleAtivo(produto)">
+                  {{ produto.ativo ? 'Desativar' : 'Ativar' }}
+                </button>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ── Painel de formulário (novo/editar) ─────────────────────── -->
+  @if (showForm()) {
+    <div class="modal-overlay" (click)="fecharForm()">
+      <div class="modal-panel" (click)="$event.stopPropagation()">
+        <div class="card-header">
+          <h3>{{ editingId() ? 'Editar Produto' : 'Novo Produto' }}</h3>
+          <button class="btn btn-icon btn-outline" (click)="fecharForm()" id="btn-fechar-form">✕</button>
+        </div>
+
+        <div class="card-body">
+          @if (error()) {
+            <div class="form-error mb-2">⚠ {{ error() }}</div>
+          }
+
+          <form [formGroup]="form" (ngSubmit)="salvar()">
+            <div class="form-group">
+              <label class="form-label">Nome *</label>
+              <input class="form-control" formControlName="nome" id="input-nome-produto">
+              @if (nomeCtrl.invalid && nomeCtrl.touched) {
+                <span class="form-error">⚠ Informe o nome do produto</span>
+              }
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Descrição</label>
+              <textarea class="form-control" formControlName="descricao" rows="2"></textarea>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Marca</label>
+                <select class="form-control" formControlName="marcaId">
+                  <option [ngValue]="null">—</option>
+                  @for (marca of marcas(); track marca.id) {
+                    <option [ngValue]="marca.id">{{ marca.nome }}</option>
+                  }
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Categoria</label>
+                <select class="form-control" formControlName="categoriaId">
+                  <option [ngValue]="null">—</option>
+                  @for (categoria of categorias(); track categoria.id) {
+                    <option [ngValue]="categoria.id">{{ categoria.nome }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">SKU</label>
+                <input class="form-control" formControlName="sku" id="input-sku-produto">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Código de Barras</label>
+                <input class="form-control" formControlName="codigoBarras">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Preço de Custo *</label>
+                <input type="number" step="0.01" min="0" class="form-control" formControlName="precoCusto">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Preço de Venda *</label>
+                <input type="number" step="0.01" min="0" class="form-control" formControlName="precoVenda">
+              </div>
+            </div>
+
+            <div class="form-group form-check">
+              <label class="form-label">
+                <input type="checkbox" formControlName="temGrade"> Produto com grade (tamanho/cor)?
+              </label>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" class="btn btn-outline" (click)="fecharForm()">Cancelar</button>
+              <button type="submit" class="btn btn-primary" [disabled]="saving()" id="btn-salvar-produto">
+                {{ saving() ? 'Salvando...' : 'Salvar' }}
+              </button>
+            </div>
+          </form>
+
+          <!-- ── Grade de variações ────────────────────────────── -->
+          @if (temGrade) {
+            <div class="grade-section mt-3">
+              <h4>Variações</h4>
+
+              @if (!editingId()) {
+                <p class="text-muted">Salve o produto primeiro para cadastrar as variações.</p>
+              } @else {
+                <div class="table-container mb-2">
+                  <table class="data-table">
+                    <thead>
+                      <tr><th>Tamanho</th><th>Cor</th><th>SKU</th><th>Status</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                      @if (variacoes().length === 0) {
+                        <tr><td colspan="5" class="text-center text-muted">Nenhuma variação cadastrada.</td></tr>
+                      }
+                      @for (v of variacoes(); track v.id) {
+                        <tr>
+                          <td>{{ v.tamanhoValor ?? '—' }}</td>
+                          <td>{{ v.corNome ?? '—' }}</td>
+                          <td>{{ v.sku }}</td>
+                          <td>
+                            <span class="badge" [class.badge-success]="v.ativo" [class.badge-danger]="!v.ativo">
+                              {{ v.ativo ? 'Ativo' : 'Inativo' }}
+                            </span>
+                          </td>
+                          <td class="d-flex gap-1">
+                            <button class="btn btn-sm" [class.btn-danger]="v.ativo" [class.btn-success]="!v.ativo"
+                                    (click)="toggleAtivoVariacao(v)">
+                              {{ v.ativo ? 'Desativar' : 'Ativar' }}
+                            </button>
+                            <button class="btn btn-outline btn-sm" (click)="removerVariacao(v)">Excluir</button>
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+
+                <form [formGroup]="variacaoForm" (ngSubmit)="adicionarVariacao()" class="form-row grade-add-form">
+                  <div class="form-group">
+                    <label class="form-label">Tamanho</label>
+                    <select class="form-control" formControlName="tamanhoId" (change)="sugerirSkuVariacao()">
+                      <option [ngValue]="null">—</option>
+                      @for (t of tamanhos(); track t.id) {
+                        <option [ngValue]="t.id">{{ t.valor }}</option>
+                      }
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Cor</label>
+                    <select class="form-control" formControlName="corId" (change)="sugerirSkuVariacao()">
+                      <option [ngValue]="null">—</option>
+                      @for (c of cores(); track c.id) {
+                        <option [ngValue]="c.id">{{ c.nome }}</option>
+                      }
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">SKU *</label>
+                    <input class="form-control" formControlName="sku">
+                  </div>
+                  <div class="form-group form-actions-inline">
+                    <button type="submit" class="btn btn-secondary" id="btn-add-variacao">+ Adicionar</button>
+                  </div>
+                </form>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+</div>

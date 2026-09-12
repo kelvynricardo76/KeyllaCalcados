@@ -1,0 +1,92 @@
+<div class="usuarios-page animate-fade-in">
+
+  <div class="page-header">
+    <div>
+      <h1>Usuários</h1>
+      <p class="text-muted">Gestão de usuários e perfis de acesso.</p>
+    </div>
+    <button class="btn btn-primary" id="btn-novo-usuario" (click)="abrirNovo()">+ Novo Usuário</button>
+  </div>
+
+  <div class="table-container">
+    <table class="data-table">
+      <thead><tr><th>Nome</th><th>E-mail</th><th>Perfil</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        @if (loading()) {
+          <tr><td colspan="5" class="text-center text-muted">Carregando...</td></tr>
+        } @else if (usuarios().length === 0) {
+          <tr><td colspan="5" class="text-center text-muted">Nenhum usuário cadastrado.</td></tr>
+        } @else {
+          @for (u of usuarios(); track u.id) {
+            <tr>
+              <td>{{ u.nome }}</td>
+              <td>{{ u.email }}</td>
+              <td><span class="badge badge-primary">{{ u.perfil }}</span></td>
+              <td>
+                <span class="badge" [class.badge-success]="u.ativo" [class.badge-danger]="!u.ativo">
+                  {{ u.ativo ? 'Ativo' : 'Inativo' }}
+                </span>
+              </td>
+              <td class="d-flex gap-1">
+                <button class="btn btn-outline btn-sm" (click)="editar(u)">Editar</button>
+                <button class="btn btn-sm" [class.btn-danger]="u.ativo" [class.btn-success]="!u.ativo"
+                        (click)="toggleAtivo(u)">{{ u.ativo ? 'Desativar' : 'Ativar' }}</button>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @if (showForm()) {
+    <div class="modal-overlay" (click)="fecharForm()">
+      <div class="modal-panel" (click)="$event.stopPropagation()">
+        <div class="card-header">
+          <h3>{{ editingId() ? 'Editar Usuário' : 'Novo Usuário' }}</h3>
+          <button class="btn btn-icon btn-outline" (click)="fecharForm()">✕</button>
+        </div>
+        <div class="card-body">
+          @if (error()) {
+            <div class="form-error mb-2">⚠ {{ error() }}</div>
+          }
+          <form [formGroup]="form" (ngSubmit)="salvar()">
+            <div class="form-group">
+              <label class="form-label">Nome *</label>
+              <input class="form-control" formControlName="nome">
+              @if (nomeCtrl.invalid && nomeCtrl.touched) {
+                <span class="form-error">⚠ Informe o nome</span>
+              }
+            </div>
+            <div class="form-group">
+              <label class="form-label">E-mail *</label>
+              <input class="form-control" type="email" formControlName="email">
+              @if (emailCtrl.invalid && emailCtrl.touched) {
+                <span class="form-error">⚠ E-mail inválido</span>
+              }
+            </div>
+            <div class="form-group">
+              <label class="form-label">Perfil *</label>
+              <select class="form-control" formControlName="perfil">
+                @for (p of perfis; track p) {
+                  <option [value]="p">{{ p }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">{{ editingId() ? 'Nova Senha (opcional)' : 'Senha *' }}</label>
+              <input class="form-control" type="password" formControlName="senha">
+              @if (senhaCtrl.invalid && senhaCtrl.touched) {
+                <span class="form-error">⚠ Mínimo 6 caracteres</span>
+              }
+            </div>
+            <div class="form-actions">
+              <button type="button" class="btn btn-outline" (click)="fecharForm()">Cancelar</button>
+              <button type="submit" class="btn btn-primary" [disabled]="saving()">{{ saving() ? 'Salvando...' : 'Salvar' }}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  }
+</div>

@@ -1,0 +1,189 @@
+<div class="fiado-page animate-fade-in">
+
+  <div class="page-header">
+    <div>
+      <h1>Fiado</h1>
+      <p class="text-muted">Controle de crédito por cliente e recebimento de pagamentos.</p>
+    </div>
+    <button class="btn btn-primary" id="btn-novo-fiado" (click)="abrirNovo()">+ Lançar Fiado</button>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-body toolbar">
+      <button class="btn btn-sm" [class.btn-primary]="filtro() === 'ABERTOS'" [class.btn-outline]="filtro() !== 'ABERTOS'"
+              (click)="filtro.set('ABERTOS')">Em aberto</button>
+      <button class="btn btn-sm" [class.btn-primary]="filtro() === 'VENCIDOS'" [class.btn-outline]="filtro() !== 'VENCIDOS'"
+              (click)="filtro.set('VENCIDOS')">Vencidos</button>
+      <button class="btn btn-sm" [class.btn-primary]="filtro() === 'TODOS'" [class.btn-outline]="filtro() !== 'TODOS'"
+              (click)="filtro.set('TODOS')">Todos</button>
+    </div>
+  </div>
+
+  <div class="table-container">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Cliente</th>
+          <th>Total</th>
+          <th>Pago</th>
+          <th>Saldo</th>
+          <th>Vencimento</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (loading()) {
+          <tr><td colspan="7" class="text-center text-muted">Carregando...</td></tr>
+        } @else if (fiadosFiltrados().length === 0) {
+          <tr><td colspan="7" class="text-center text-muted">Nenhum fiado encontrado.</td></tr>
+        } @else {
+          @for (fiado of fiadosFiltrados(); track fiado.id) {
+            <tr>
+              <td>{{ fiado.clienteNome }}</td>
+              <td>{{ fiado.valorTotal | currency:'BRL' }}</td>
+              <td>{{ fiado.valorPago | currency:'BRL' }}</td>
+              <td>{{ fiado.valorRestante | currency:'BRL' }}</td>
+              <td>{{ fiado.dataVencimento | date:'dd/MM/yyyy' }}</td>
+              <td>
+                @if (fiado.vencido) {
+                  <span class="badge badge-danger">Vencido</span>
+                } @else if (fiado.status === 'PAGO') {
+                  <span class="badge badge-success">Pago</span>
+                } @else if (fiado.status === 'PARCIAL') {
+                  <span class="badge badge-warning">Parcial</span>
+                } @else {
+                  <span class="badge badge-info">Aberto</span>
+                }
+              </td>
+              <td>
+                @if (fiado.status !== 'PAGO') {
+                  <button class="btn btn-secondary btn-sm" (click)="abrirPagamento(fiado)">Receber</button>
+                }
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ── Modal: novo fiado ─────────────────────────────────────────── -->
+  @if (showForm()) {
+    <div class="modal-overlay" (click)="fecharForm()">
+      <div class="modal-panel" (click)="$event.stopPropagation()">
+        <div class="card-header">
+          <h3>Lançar Fiado</h3>
+          <button class="btn btn-icon btn-outline" (click)="fecharForm()">✕</button>
+        </div>
+        <div class="card-body">
+          @if (error()) {
+            <div class="form-error mb-2">⚠ {{ error() }}</div>
+          }
+          <form [formGroup]="form" (ngSubmit)="salvar()">
+            <div class="form-group">
+              <label class="form-label">Cliente *</label>
+              <select class="form-control" formControlName="clienteId">
+                <option [ngValue]="null">Selecione...</option>
+                @for (c of clientes(); track c.id) {
+                  <option [ngValue]="c.id">{{ c.nome }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Loja *</label>
+                <select class="form-control" formControlName="lojaId">
+                  @for (l of lojas(); track l.id) {
+                    <option [ngValue]="l.id">{{ l.nome }}</option>
+                  }
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Valor *</label>
+                <input type="number" step="0.01" min="0.01" class="form-control" formControlName="valorTotal">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Vencimento *</label>
+              <input type="date" class="form-control" formControlName="dataVencimento">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Observações</label>
+              <textarea class="form-control" rows="2" formControlName="observacoes"></textarea>
+            </div>
+            <div class="form-actions">
+              <button type="button" class="btn btn-outline" (click)="fecharForm()">Cancelar</button>
+              <button type="submit" class="btn btn-primary" [disabled]="saving()">
+                {{ saving() ? 'Salvando...' : 'Lançar' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ── Modal: receber pagamento ──────────────────────────────────── -->
+  @if (showPagamento() && fiadoSelecionado(); as fiado) {
+    <div class="modal-overlay" (click)="fecharPagamento()">
+      <div class="modal-panel" (click)="$event.stopPropagation()">
+        <div class="card-header">
+          <h3>Receber Pagamento — {{ fiado.clienteNome }}</h3>
+          <button class="btn btn-icon btn-outline" (click)="fecharPagamento()">✕</button>
+        </div>
+        <div class="card-body">
+          @if (error()) {
+            <div class="form-error mb-2">⚠ {{ error() }}</div>
+          }
+          <p class="text-muted mb-2">Saldo devedor: <strong>{{ fiado.valorRestante | currency:'BRL' }}</strong></p>
+
+          <form [formGroup]="pagamentoForm" (ngSubmit)="confirmarPagamento()">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Valor *</label>
+                <input type="number" step="0.01" min="0.01" class="form-control" formControlName="valor">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Forma de Pagamento *</label>
+                <select class="form-control" formControlName="formaPagamento">
+                  @for (f of formasPagamento; track f) {
+                    <option [value]="f">{{ f }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Observações</label>
+              <textarea class="form-control" rows="2" formControlName="observacoes"></textarea>
+            </div>
+            <div class="form-actions">
+              <button type="button" class="btn btn-outline" (click)="fecharPagamento()">Cancelar</button>
+              <button type="submit" class="btn btn-primary" [disabled]="saving()">
+                {{ saving() ? 'Salvando...' : 'Confirmar Pagamento' }}
+              </button>
+            </div>
+          </form>
+
+          @if (pagamentos().length > 0) {
+            <h4 class="section-title">Pagamentos anteriores</h4>
+            <div class="table-container">
+              <table class="data-table">
+                <thead><tr><th>Data</th><th>Valor</th><th>Forma</th></tr></thead>
+                <tbody>
+                  @for (p of pagamentos(); track p.id) {
+                    <tr>
+                      <td>{{ p.dataPagamento | date:'dd/MM/yyyy' }}</td>
+                      <td>{{ p.valor | currency:'BRL' }}</td>
+                      <td>{{ p.formaPagamento }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+</div>

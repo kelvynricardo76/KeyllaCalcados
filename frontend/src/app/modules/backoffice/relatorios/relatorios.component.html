@@ -1,0 +1,91 @@
+<div class="relatorios-page animate-fade-in">
+
+  <div class="page-header">
+    <div>
+      <h1>Relatórios</h1>
+      <p class="text-muted">Vendas, ticket médio e produtos mais vendidos por período.</p>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-body filtro-periodo">
+      <div class="form-group">
+        <label class="form-label">De</label>
+        <input type="date" class="form-control" [(ngModel)]="inicio">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Até</label>
+        <input type="date" class="form-control" [(ngModel)]="fim">
+      </div>
+      <button class="btn btn-primary" (click)="buscar()">Filtrar</button>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <p class="text-muted text-center">Carregando...</p>
+  } @else if (error()) {
+    <div class="form-error">⚠ {{ error() }}</div>
+  } @else if (relatorio()) {
+    @let r = relatorio()!;
+
+    <div class="kpi-grid mb-3">
+      <div class="kpi-card">
+        <p class="kpi-label">Faturamento no período</p>
+        <p class="kpi-value">{{ r.faturamentoTotal | currency:'BRL' }}</p>
+      </div>
+      <div class="kpi-card">
+        <p class="kpi-label">Vendas</p>
+        <p class="kpi-value">{{ r.quantidadeVendas }}</p>
+      </div>
+      <div class="kpi-card">
+        <p class="kpi-label">Ticket Médio</p>
+        <p class="kpi-value">{{ r.ticketMedio | currency:'BRL' }}</p>
+      </div>
+    </div>
+
+    <div class="relatorio-grid">
+      <div class="card">
+        <div class="card-header"><h3>Vendas no Período</h3></div>
+        <div class="table-container">
+          <table class="data-table">
+            <thead><tr><th>Data</th><th>Cliente</th><th>Vendedor</th><th>Valor</th></tr></thead>
+            <tbody>
+              @if (r.vendas.length === 0) {
+                <tr><td colspan="4" class="text-center text-muted">Nenhuma venda no período.</td></tr>
+              }
+              @for (v of r.vendas; track v.id) {
+                <tr>
+                  <td>{{ v.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
+                  <td>{{ v.clienteNome }}</td>
+                  <td>{{ v.usuarioNome }}</td>
+                  <td>{{ v.valorTotal | currency:'BRL' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3>Mais Vendidos</h3></div>
+        <div class="table-container">
+          <table class="data-table">
+            <thead><tr><th>Produto</th><th>Qtd.</th><th>Total</th></tr></thead>
+            <tbody>
+              @if (r.topProdutos.length === 0) {
+                <tr><td colspan="3" class="text-center text-muted">Sem dados.</td></tr>
+              }
+              @for (p of r.topProdutos; track p.nomeProduto) {
+                <tr>
+                  <td>{{ p.nomeProduto }}</td>
+                  <td>{{ p.quantidadeVendida }}</td>
+                  <td>{{ p.valorTotal | currency:'BRL' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  }
+</div>

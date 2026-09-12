@@ -1,0 +1,148 @@
+<div class="login-page">
+
+  <!-- Fundo animado com padrão de calçados -->
+  <div class="login-bg">
+    <div class="bg-shape shape-1"></div>
+    <div class="bg-shape shape-2"></div>
+    <div class="bg-shape shape-3"></div>
+  </div>
+
+  <!-- Card de login -->
+  <div class="login-card animate-fade-in">
+
+    <!-- Header com logo -->
+    <div class="login-logo-header">
+      <img src="assets/images/logo.png" alt="Keylla Calçados" class="logo-img"
+           onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+      <!-- Fallback SVG caso a imagem não carregue -->
+      <div class="logo-fallback" style="display:none">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+          <path d="M32 28C32 28 28 20 20 18C14 16.4 8 20 8 20L10 28H32Z" fill="white" opacity="0.9"/>
+          <path d="M10 28C10 28 8 22 12 20" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+          <ellipse cx="30" cy="29" rx="3" ry="2" fill="white" opacity="0.7"/>
+          <ellipse cx="14" cy="29" rx="3" ry="2" fill="white" opacity="0.7"/>
+        </svg>
+        <div class="logo-text-fallback">
+          <span class="brand-name">Keylla</span>
+          <span class="brand-sub">Calçados</span>
+        </div>
+      </div>
+      <div class="stars-row">
+        <span class="star" *ngFor="let s of [1,2,3,4,5]">★</span>
+      </div>
+      <p class="logo-subtitle">Sistema de Gestão &amp; PDV</p>
+    </div>
+
+    <!-- Abas: E-mail | PIN -->
+    <div class="tab-switcher">
+      <button class="tab-btn" [class.active]="activeTab() === 'email'"
+              (click)="activeTab.set('email')" id="btn-tab-email">
+        <span class="tab-icon">✉</span>
+        E-mail &amp; Senha
+      </button>
+      <button class="tab-btn" [class.active]="activeTab() === 'pin'"
+              (click)="activeTab.set('pin'); onPinClear()" id="btn-tab-pin">
+        <span class="tab-icon">🔢</span>
+        Acesso por PIN
+      </button>
+    </div>
+
+    <!-- Mensagem de erro -->
+    @if (error()) {
+      <div class="error-banner animate-fade-in">
+        <span>⚠</span> {{ error() }}
+      </div>
+    }
+
+    <!-- ── Tab: E-mail / Senha ─────────────────────────────── -->
+    @if (activeTab() === 'email') {
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="login-form">
+
+        <div class="form-group">
+          <label class="form-label" for="email">E-mail</label>
+          <div class="input-wrapper">
+            <span class="input-icon">✉</span>
+            <input id="email" type="email" formControlName="email"
+                   class="form-control" placeholder="seu@email.com.br"
+                   autocomplete="email">
+          </div>
+          @if (emailCtrl.invalid && emailCtrl.touched) {
+            <span class="form-error">⚠ E-mail inválido</span>
+          }
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="senha">Senha</label>
+          <div class="input-wrapper">
+            <span class="input-icon">🔒</span>
+            <input id="senha" [type]="showSenha() ? 'text' : 'password'"
+                   formControlName="senha" class="form-control"
+                   placeholder="••••••••" autocomplete="current-password">
+            <button type="button" class="btn-eye" (click)="toggleShowSenha()"
+                    [attr.aria-label]="showSenha() ? 'Ocultar senha' : 'Mostrar senha'">
+              {{ showSenha() ? '🙈' : '👁' }}
+            </button>
+          </div>
+          @if (senhaCtrl.invalid && senhaCtrl.touched) {
+            <span class="form-error">⚠ Mínimo 6 caracteres</span>
+          }
+        </div>
+
+        <button type="submit" id="btn-entrar"
+                class="btn btn-primary btn-lg btn-block"
+                [disabled]="loading()">
+          @if (loading()) {
+            <span class="spinner"></span> Entrando...
+          } @else {
+            Entrar no Sistema
+          }
+        </button>
+
+      </form>
+    }
+
+    <!-- ── Tab: PIN rápido ─────────────────────────────────── -->
+    @if (activeTab() === 'pin') {
+      <div class="pin-section">
+        <p class="pin-hint">Digite seu PIN para trocar de operador rapidamente</p>
+
+        <!-- Indicadores de dígitos -->
+        <div class="pin-dots">
+          @for (i of [0,1,2,3,4,5]; track i) {
+            <div class="pin-dot" [class.filled]="i < pinDigits().length"></div>
+          }
+        </div>
+
+        <!-- Teclado numérico -->
+        <div class="pin-pad">
+          @for (digit of ['1','2','3','4','5','6','7','8','9']; track digit) {
+            <button class="pin-key" [id]="'pin-key-' + digit"
+                    (click)="onPinDigit(digit)" [disabled]="loading()">
+              {{ digit }}
+            </button>
+          }
+          <button class="pin-key pin-key-clear" (click)="onPinClear()"
+                  [disabled]="loading()" id="pin-key-clear">
+            ✕
+          </button>
+          <button class="pin-key" (click)="onPinDigit('0')"
+                  [disabled]="loading()" id="pin-key-0">
+            0
+          </button>
+          <button class="pin-key pin-key-ok" [disabled]="loading()" id="pin-key-ok">
+            @if (loading()) {
+              <span class="spinner"></span>
+            } @else {
+              ✓
+            }
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- Footer -->
+    <p class="login-footer">
+      Keylla Calçados © {{ currentYear }} · Todos os direitos reservados
+    </p>
+  </div>
+</div>

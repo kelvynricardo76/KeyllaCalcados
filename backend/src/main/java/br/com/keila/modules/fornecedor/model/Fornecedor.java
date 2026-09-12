@@ -41,7 +41,7 @@ public class Fornecedor {
     @Column(length = 80)
     private String contato;
 
-    @Column(columnDefinition = "TEXT")
+    @Lob
     private String observacoes;
 
     @Column(nullable = false)

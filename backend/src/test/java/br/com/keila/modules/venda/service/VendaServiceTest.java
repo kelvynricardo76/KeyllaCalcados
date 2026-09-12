@@ -19,7 +19,10 @@ import br.com.keila.modules.venda.dto.VendaResponse;
 import br.com.keila.modules.venda.model.FormaPagamento;
 import br.com.keila.modules.venda.model.ItemVenda;
 import br.com.keila.modules.venda.model.StatusVenda;
+import br.com.keila.modules.venda.model.PagamentoVenda;
 import br.com.keila.modules.venda.model.Venda;
+import br.com.keila.modules.venda.repository.ItemVendaRepository;
+import br.com.keila.modules.venda.repository.PagamentoVendaRepository;
 import br.com.keila.modules.venda.repository.VendaRepository;
 import br.com.keila.shared.exception.RegraNegocioException;
 import org.junit.jupiter.api.AfterEach;
@@ -51,6 +54,8 @@ class VendaServiceTest {
     @Mock private VariacaoProdutoRepository variacaoRepository;
     @Mock private EstoqueService estoqueService;
     @Mock private FiadoService fiadoService;
+    @Mock private ItemVendaRepository itemVendaRepository;
+    @Mock private PagamentoVendaRepository pagamentoVendaRepository;
 
     private VendaService vendaService;
 
@@ -60,7 +65,10 @@ class VendaServiceTest {
     @BeforeEach
     void setUp() {
         vendaService = new VendaService(vendaRepository, sessaoRepository, clienteRepository, lojaRepository,
-                variacaoRepository, estoqueService, fiadoService);
+                variacaoRepository, estoqueService, fiadoService, itemVendaRepository, pagamentoVendaRepository);
+
+        lenient().when(itemVendaRepository.save(any(ItemVenda.class))).thenAnswer(inv -> inv.getArgument(0));
+        lenient().when(pagamentoVendaRepository.save(any(PagamentoVenda.class))).thenAnswer(inv -> inv.getArgument(0));
 
         loja = Loja.builder().id(1L).nome("Loja Centro").build();
         Produto produto = Produto.builder().id(1L).nome("Tênis Esportivo").precoVenda(new BigDecimal("100.00")).build();

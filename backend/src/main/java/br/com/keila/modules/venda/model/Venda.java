@@ -10,14 +10,12 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -58,8 +56,7 @@ public class Venda {
     private Loja loja;
 
     @Enumerated(EnumType.STRING)
-    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
-    @Column(nullable = false, columnDefinition = "status_venda")
+    @Column(nullable = false, length = 30)
     private StatusVenda status;
 
     @Column(nullable = false, precision = 12, scale = 2)
@@ -74,7 +71,7 @@ public class Venda {
     @Column(precision = 12, scale = 2)
     private BigDecimal troco;
 
-    @Column(columnDefinition = "TEXT")
+    @Lob
     private String observacoes;
 
     @Builder.Default
@@ -87,9 +84,9 @@ public class Venda {
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
-    private OffsetDateTime createdAt;
+    private Instant createdAt;
 
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
-    private OffsetDateTime updatedAt;
+    private Instant updatedAt;
 }

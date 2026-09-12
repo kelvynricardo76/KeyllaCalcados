@@ -7,7 +7,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,18 +17,16 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 /**
- * Lê o Bearer token de cada requisição, valida contra a blacklist do Redis
+ * Lê o Bearer token de cada requisição, valida contra a blacklist em memória
  * (populada no logout) e popula o SecurityContext quando válido.
  */
 @Component
 @RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
 
-    private static final String BLACKLIST_PREFIX = "jwt:blacklist:";
-
     private final JwtService jwtService;
     private final UsuarioRepository usuarioRepository;
-    private final StringRedisTemplate redisTemplate;
+    private final TokenBlacklistService tokenBlacklistService;
 
     @Override
     protected void doFilterInternal(
@@ -48,7 +45,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         try {
             String jti = jwtService.extractJti(token);
-            if (Boolean.TRUE.equals(redisTemplate.hasKey(BLACKLIST_PREFIX + jti))) {
+            if (tokenBlacklistService.isBlacklisted(jti)) {
                 filterChain.doFilter(request, response);
                 return;
             }

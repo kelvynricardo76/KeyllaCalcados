@@ -6,8 +6,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
 /** Entidade JPA para a tabela `tamanhos` (V2__create_produtos.sql). Dado de referência, pouco mutável. */
 @Entity
@@ -27,8 +25,7 @@ public class Tamanho {
     private String valor;
 
     @Enumerated(EnumType.STRING)
-    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
-    @Column(nullable = false, columnDefinition = "tipo_tamanho")
+    @Column(nullable = false, length = 30)
     private TipoTamanho tipo;
 
     @Column

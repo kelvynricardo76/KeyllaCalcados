@@ -1,5 +1,8 @@
 HELP.md
 target/
+
+### Banco H2 (gerado em runtime, não deve ir para o controle de versão) ###
+data/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/

@@ -26,7 +26,7 @@ public class Marca {
     @Column(nullable = false, unique = true, length = 80)
     private String nome;
 
-    @Column(columnDefinition = "TEXT")
+    @Lob
     private String descricao;
 
     @Column(name = "logo_url", length = 500)

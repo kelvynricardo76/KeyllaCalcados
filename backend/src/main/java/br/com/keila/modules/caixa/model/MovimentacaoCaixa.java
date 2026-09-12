@@ -7,8 +7,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -36,14 +34,14 @@ public class MovimentacaoCaixa {
     private Usuario usuario;
 
     @Enumerated(EnumType.STRING)
-    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
-    @Column(nullable = false, columnDefinition = "tipo_mov_caixa")
+    @Column(nullable = false, length = 30)
     private TipoMovCaixa tipo;
 
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal valor;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Lob
+    @Column(nullable = false)
     private String descricao;
 
     @Column(length = 60)

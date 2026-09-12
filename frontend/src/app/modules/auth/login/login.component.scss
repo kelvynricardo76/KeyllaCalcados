@@ -294,6 +294,18 @@
   }
 }
 
+/* ── Modo demonstração (apenas dev, sem backend) ─────────────────────── */
+.btn-demo {
+  margin: 4px 32px 0;
+  width: calc(100% - 64px);
+  font-size: 0.8rem;
+  border-style: dashed;
+  color: var(--color-warning);
+  border-color: var(--color-warning);
+
+  &:hover { background: var(--color-warning-bg); }
+}
+
 /* ── Footer ───────────────────────────────────────────────────────── */
 .login-footer {
   text-align: center;

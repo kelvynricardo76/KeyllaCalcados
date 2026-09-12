@@ -31,7 +31,8 @@ public class SecurityConfig {
             "/api/v1/auth/**",
             "/api/v1/api-docs/**",
             "/api/v1/swagger-ui/**",
-            "/actuator/health"
+            "/actuator/health",
+            "/h2-console/**"
     };
 
     @Bean
@@ -44,6 +45,8 @@ public class SecurityConfig {
                         .requestMatchers(PUBLIC_PATHS).permitAll()
                         .requestMatchers("/api/v1/usuarios/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
+                // Console do H2 roda dentro de um <frame>; sem isso o navegador bloqueia por X-Frame-Options.
+                .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

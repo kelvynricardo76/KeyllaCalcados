@@ -7,8 +7,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -54,11 +52,10 @@ public class SessaoCaixa {
     private BigDecimal diferenca;
 
     @Enumerated(EnumType.STRING)
-    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
-    @Column(nullable = false, columnDefinition = "status_sessao")
+    @Column(nullable = false, length = 30)
     private StatusSessao status;
 
-    @Column(columnDefinition = "TEXT")
+    @Lob
     private String observacoes;
 
     @PrePersist

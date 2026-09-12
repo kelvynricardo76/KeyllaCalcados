@@ -3,49 +3,33 @@ spring:
     name: keila-calcados-api
 
   # ─── Banco de dados ───────────────────────────────────────────────
+  # H2 em arquivo local — sem dependência externa (Postgres/Docker).
+  # O arquivo fica em backend/data/keiladb.mv.db, criado na primeira execução.
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/keila_calcados}
-    username: ${DB_USER:keila}
-    password: ${DB_PASS:keila123}
-    hikari:
-      maximum-pool-size: 20          # Suficiente para 3 caixas + backoffice
-      minimum-idle: 5
-      connection-timeout: 30000
+    url: ${DB_URL:jdbc:h2:file:./data/keiladb;AUTO_SERVER=TRUE}
+    driver-class-name: org.h2.Driver
+    username: ${DB_USER:sa}
+    password: ${DB_PASS:}
 
   jpa:
     hibernate:
-      ddl-auto: validate             # Flyway gerencia o schema; JPA só valida
+      ddl-auto: update               # Hibernate cria/atualiza o schema a partir das entidades
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-        default_schema: public
+        dialect: org.hibernate.dialect.H2Dialect
         format_sql: false
     open-in-view: false              # Evita N+1 silencioso; lazy loading explícito
 
-  # ─── Flyway: migrações versionadas ────────────────────────────────
-  flyway:
-    enabled: true
-    locations: classpath:db/migration
-    baseline-on-migrate: true
-
-  # ─── Redis: cache de catálogo e sessões ───────────────────────────
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:}
-      timeout: 2000ms
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
 
   # ─── Upload de arquivos ───────────────────────────────────────────
   servlet:
     multipart:
       max-file-size: 10MB
       max-request-size: 50MB
-
-  cache:
-    type: redis
-    redis:
-      time-to-live: 300000           # 5 minutos default para cache de produtos
 
 # ─── Configurações da aplicação ────────────────────────────────────
 app:

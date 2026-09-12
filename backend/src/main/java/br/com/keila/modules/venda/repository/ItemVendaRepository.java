@@ -5,7 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.List;
 
 public interface ItemVendaRepository extends JpaRepository<ItemVenda, Long> {
@@ -17,7 +17,7 @@ public interface ItemVendaRepository extends JpaRepository<ItemVenda, Long> {
             group by i.nomeProdutoSnapshot
             order by sum(i.quantidade) desc
             """)
-    List<RankingProduto> ranquearProdutos(@Param("inicio") OffsetDateTime inicio, @Param("fim") OffsetDateTime fim);
+    List<RankingProduto> ranquearProdutos(@Param("inicio") Instant inicio, @Param("fim") Instant fim);
 
     interface RankingProduto {
         String getNome();

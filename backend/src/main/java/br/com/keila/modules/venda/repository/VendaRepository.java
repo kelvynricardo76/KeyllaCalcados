@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.List;
 
 public interface VendaRepository extends JpaRepository<Venda, Long> {
@@ -16,7 +16,7 @@ public interface VendaRepository extends JpaRepository<Venda, Long> {
 
     List<Venda> findByStatusOrderByCreatedAtDesc(StatusVenda status);
 
-    List<Venda> findByStatusAndCreatedAtBetween(StatusVenda status, OffsetDateTime inicio, OffsetDateTime fim);
+    List<Venda> findByStatusAndCreatedAtBetween(StatusVenda status, Instant inicio, Instant fim);
 
     @Query("select coalesce(sum(v.troco), 0) from Venda v where v.sessao.id = :sessaoId and v.status = 'FECHADA'")
     BigDecimal somarTrocoPorSessao(@Param("sessaoId") Long sessaoId);

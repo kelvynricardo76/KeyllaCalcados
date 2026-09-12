@@ -43,7 +43,7 @@ public class PagamentoFiado {
     @Column(name = "data_pagamento", nullable = false)
     private LocalDate dataPagamento;
 
-    @Column(columnDefinition = "TEXT")
+    @Lob
     private String observacoes;
 
     @Column(name = "created_at", nullable = false, updatable = false)

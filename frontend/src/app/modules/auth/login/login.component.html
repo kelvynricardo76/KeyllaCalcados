@@ -140,6 +140,12 @@
       </div>
     }
 
+    @if (modoDemoDisponivel) {
+      <button type="button" class="btn btn-outline btn-block btn-demo" id="btn-modo-demo" (click)="entrarModoDemo()">
+        🧪 Entrar em modo demonstração (sem backend)
+      </button>
+    }
+
     <!-- Footer -->
     <p class="login-footer">
       Keylla Calçados © {{ currentYear }} · Todos os direitos reservados

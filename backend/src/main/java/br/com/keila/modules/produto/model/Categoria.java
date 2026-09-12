@@ -10,7 +10,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 
 /** Entidade JPA para a tabela `categorias` (V2__create_produtos.sql). Suporta árvore via categoriaPai. */
 @Entity
@@ -34,7 +34,7 @@ public class Categoria {
     @JoinColumn(name = "categoria_pai_id")
     private Categoria categoriaPai;
 
-    @Column(columnDefinition = "TEXT")
+    @Lob
     private String descricao;
 
     @Column
@@ -45,9 +45,9 @@ public class Categoria {
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
-    private OffsetDateTime createdAt;
+    private Instant createdAt;
 
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
-    private OffsetDateTime updatedAt;
+    private Instant updatedAt;
 }

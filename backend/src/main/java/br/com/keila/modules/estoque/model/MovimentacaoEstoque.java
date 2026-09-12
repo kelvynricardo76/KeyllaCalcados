@@ -9,8 +9,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
 import java.time.OffsetDateTime;
 
@@ -37,8 +35,7 @@ public class MovimentacaoEstoque {
     private Loja loja;
 
     @Enumerated(EnumType.STRING)
-    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
-    @Column(nullable = false, columnDefinition = "tipo_mov_estoque")
+    @Column(nullable = false, length = 30)
     private TipoMovEstoque tipo;
 
     @Column(nullable = false)
@@ -56,7 +53,7 @@ public class MovimentacaoEstoque {
     @Column(name = "referencia_id")
     private Long referenciaId;
 
-    @Column(columnDefinition = "TEXT")
+    @Lob
     private String motivo;
 
     @ManyToOne(fetch = FetchType.LAZY)

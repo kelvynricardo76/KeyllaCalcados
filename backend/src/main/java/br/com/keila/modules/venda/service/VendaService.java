@@ -14,6 +14,8 @@ import br.com.keila.modules.produto.repository.VariacaoProdutoRepository;
 import br.com.keila.modules.usuario.model.Usuario;
 import br.com.keila.modules.venda.dto.*;
 import br.com.keila.modules.venda.model.*;
+import br.com.keila.modules.venda.repository.ItemVendaRepository;
+import br.com.keila.modules.venda.repository.PagamentoVendaRepository;
 import br.com.keila.modules.venda.repository.VendaRepository;
 import br.com.keila.shared.exception.EntidadeNaoEncontradaException;
 import br.com.keila.shared.exception.RegraNegocioException;
@@ -38,6 +40,8 @@ public class VendaService {
     private final VariacaoProdutoRepository variacaoRepository;
     private final EstoqueService estoqueService;
     private final FiadoService fiadoService;
+    private final ItemVendaRepository itemVendaRepository;
+    private final PagamentoVendaRepository pagamentoVendaRepository;
 
     @Transactional(readOnly = true)
     public List<VendaResponse> listarPorSessao(Long sessaoId) {
@@ -113,6 +117,11 @@ public class VendaService {
                 .subtotal(subtotalItem)
                 .build();
 
+        // Persistimos o item explicitamente antes de adicioná-lo à coleção da venda:
+        // com orphanRemoval=true, o Hibernate tenta computar "órfãos" a cada flush da
+        // coleção, e um item novo (ainda sem id) nessa checagem dispara
+        // TransientObjectException. Salvando primeiro, ele já chega com id à coleção.
+        item = itemVendaRepository.save(item);
         venda.getItens().add(item);
         recalcularTotais(venda);
 
@@ -173,13 +182,14 @@ public class VendaService {
                         pagamento.valor(), LocalDate.now().plusDays(diasVencimentoFiado), venda.getId());
             }
 
-            venda.getPagamentos().add(PagamentoVenda.builder()
+            PagamentoVenda pagamentoVenda = pagamentoVendaRepository.save(PagamentoVenda.builder()
                     .venda(venda)
                     .forma(pagamento.forma())
                     .valor(pagamento.valor())
                     .parcelas(pagamento.parcelas() != null ? pagamento.parcelas() : 1)
                     .referencia(pagamento.referencia())
                     .build());
+            venda.getPagamentos().add(pagamentoVenda);
         }
 
         for (ItemVenda item : venda.getItens()) {

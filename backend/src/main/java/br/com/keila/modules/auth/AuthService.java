@@ -4,6 +4,7 @@ import br.com.keila.modules.auth.dto.AuthResponse;
 import br.com.keila.modules.auth.dto.LoginRequest;
 import br.com.keila.modules.auth.dto.PinLoginRequest;
 import br.com.keila.modules.auth.security.JwtService;
+import br.com.keila.modules.auth.security.TokenBlacklistService;
 import br.com.keila.modules.usuario.model.Usuario;
 import br.com.keila.modules.usuario.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
@@ -11,23 +12,19 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
 import java.time.Instant;
 
 @Service
 @RequiredArgsConstructor
 public class AuthService {
 
-    private static final String BLACKLIST_PREFIX = "jwt:blacklist:";
-
     private final AuthenticationManager authenticationManager;
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
-    private final StringRedisTemplate redisTemplate;
+    private final TokenBlacklistService tokenBlacklistService;
 
     public AuthResponse login(LoginRequest request) {
         authenticationManager.authenticate(
@@ -51,9 +48,8 @@ public class AuthService {
     public void logout(String token) {
         String jti = jwtService.extractJti(token);
         Instant expiration = jwtService.extractExpiration(token).toInstant();
-        Duration ttl = Duration.between(Instant.now(), expiration);
-        if (!ttl.isNegative()) {
-            redisTemplate.opsForValue().set(BLACKLIST_PREFIX + jti, "1", ttl);
+        if (expiration.isAfter(Instant.now())) {
+            tokenBlacklistService.blacklist(jti, expiration);
         }
     }
 

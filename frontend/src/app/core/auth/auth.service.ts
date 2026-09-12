@@ -39,10 +39,24 @@ export class AuthService {
       .pipe(tap(resp => this.handleAuthResponse(resp)));
   }
 
+  /**
+   * MODO DEMONSTRAÇÃO — apenas para desenvolvimento local sem backend/banco no ar.
+   * Não faz nenhuma chamada de rede; simula uma sessão ADMIN só para navegar pela UI.
+   * REMOVER antes de qualquer deploy real (ver uso em LoginComponent, atrás de !environment.production).
+   */
+  entrarModoDemo(): void {
+    this.handleAuthResponse({
+      token: 'demo-token-sem-backend',
+      nome: 'Administrador (Demo)',
+      perfil: 'ADMIN',
+      userId: 0
+    });
+  }
+
   logout() {
     // Chama o backend para adicionar o token à blacklist Redis
     const token = this.getToken();
-    if (token) {
+    if (token && !token.startsWith('demo-token')) {
       this.http.post(`${environment.apiUrl}/auth/logout`, {}).subscribe();
     }
     this.clearSession();

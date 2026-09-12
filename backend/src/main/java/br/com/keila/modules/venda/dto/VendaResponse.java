@@ -3,7 +3,7 @@ package br.com.keila.modules.venda.dto;
 import br.com.keila.modules.venda.model.StatusVenda;
 
 import java.math.BigDecimal;
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.List;
 
 public record VendaResponse(
@@ -21,6 +21,6 @@ public record VendaResponse(
         String observacoes,
         List<ItemVendaResponse> itens,
         List<PagamentoVendaResponse> pagamentos,
-        OffsetDateTime createdAt
+        Instant createdAt
 ) {
 }

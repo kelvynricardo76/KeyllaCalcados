@@ -12,7 +12,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
+import java.time.Instant;
 
 /** Entidade JPA para a tabela `clientes` (V4__create_clientes_fiado.sql). */
 @Entity
@@ -71,7 +71,7 @@ public class Cliente {
     @Column(name = "limite_fiado", precision = 12, scale = 2)
     private BigDecimal limiteFiado;
 
-    @Column(columnDefinition = "TEXT")
+    @Lob
     private String observacoes;
 
     @Column(nullable = false)
@@ -79,9 +79,9 @@ public class Cliente {
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
-    private OffsetDateTime createdAt;
+    private Instant createdAt;
 
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
-    private OffsetDateTime updatedAt;
+    private Instant updatedAt;
 }

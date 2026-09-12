@@ -11,7 +11,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
-import java.time.OffsetDateTime;
+import java.time.Instant;
 
 /** Entidade JPA para a tabela `produtos` (V2__create_produtos.sql). */
 @Entity
@@ -31,7 +31,7 @@ public class Produto {
     @Column(nullable = false, length = 200)
     private String nome;
 
-    @Column(columnDefinition = "TEXT")
+    @Lob
     private String descricao;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -65,9 +65,9 @@ public class Produto {
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
-    private OffsetDateTime createdAt;
+    private Instant createdAt;
 
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
-    private OffsetDateTime updatedAt;
+    private Instant updatedAt;
 }

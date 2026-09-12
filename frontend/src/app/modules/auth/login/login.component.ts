@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-login',
@@ -32,6 +33,14 @@ export class LoginComponent {
   PIN_LENGTH  = 6;
 
   currentYear = new Date().getFullYear();
+
+  // Só aparece fora de produção — atalho para navegar na UI sem backend/banco no ar.
+  modoDemoDisponivel = !environment.production;
+
+  entrarModoDemo() {
+    this.auth.entrarModoDemo();
+    this.redirectAfterLogin();
+  }
 
   onSubmit() {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }

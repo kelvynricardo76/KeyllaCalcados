@@ -21,7 +21,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
@@ -72,8 +72,8 @@ public class RelatorioService {
     }
 
     public RelatorioVendasResponse relatorioVendas(LocalDate inicio, LocalDate fim) {
-        OffsetDateTime inicioTs = inicio.atStartOfDay(ZONE).toOffsetDateTime();
-        OffsetDateTime fimTs = fim.atTime(LocalTime.MAX).atZone(ZONE).toOffsetDateTime();
+        Instant inicioTs = inicio.atStartOfDay(ZONE).toInstant();
+        Instant fimTs = fim.atTime(LocalTime.MAX).atZone(ZONE).toInstant();
 
         List<Venda> vendas = vendaRepository.findByStatusAndCreatedAtBetween(StatusVenda.FECHADA, inicioTs, fimTs);
         BigDecimal faturamentoTotal = somarTotais(vendas);
@@ -98,8 +98,8 @@ public class RelatorioService {
     }
 
     private List<Venda> buscarVendasFechadasDoDia(LocalDate dia) {
-        OffsetDateTime inicio = dia.atStartOfDay(ZONE).toOffsetDateTime();
-        OffsetDateTime fim = dia.atTime(LocalTime.MAX).atZone(ZONE).toOffsetDateTime();
+        Instant inicio = dia.atStartOfDay(ZONE).toInstant();
+        Instant fim = dia.atTime(LocalTime.MAX).atZone(ZONE).toInstant();
         return vendaRepository.findByStatusAndCreatedAtBetween(StatusVenda.FECHADA, inicio, fim);
     }
 
@@ -110,7 +110,7 @@ public class RelatorioService {
     private List<PontoVendaHora> vendasPorHora(List<Venda> vendas) {
         Map<Integer, BigDecimal> porHora = vendas.stream()
                 .collect(Collectors.groupingBy(
-                        v -> v.getCreatedAt().atZoneSameInstant(ZONE).getHour(),
+                        v -> v.getCreatedAt().atZone(ZONE).getHour(),
                         Collectors.reducing(BigDecimal.ZERO, Venda::getValorTotal, BigDecimal::add)));
 
         List<PontoVendaHora> pontos = new ArrayList<>();

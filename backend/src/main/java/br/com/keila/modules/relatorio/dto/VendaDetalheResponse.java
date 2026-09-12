@@ -10,7 +10,13 @@ public record VendaDetalheResponse(
         String clienteNome,
         String clienteTelefone,
         String usuarioNome,
+        String lojaNome,
+        BigDecimal subtotal,
+        BigDecimal descontoGeral,
         BigDecimal valorTotal,
-        List<ItemVendaResumo> itens
+        BigDecimal troco,
+        String observacoes,
+        List<ItemVendaResumo> itens,
+        List<PagamentoResumo> pagamentos
 ) {
 }

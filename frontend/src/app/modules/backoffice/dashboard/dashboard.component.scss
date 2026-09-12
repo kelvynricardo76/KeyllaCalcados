@@ -131,10 +131,34 @@
 }
 
 .venda-recente-item {
+  display: block;
+  width: 100%;
+  text-align: left;
   padding: 14px 20px;
+  border: none;
   border-bottom: 1px solid var(--border-color);
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.15s ease;
 
   &:last-child { border-bottom: none; }
+  &:hover {
+    background: var(--surface-bg);
+    .venda-ver-detalhe { opacity: 1; }
+  }
+}
+
+.venda-ver-detalhe {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--primary-color);
+  font-weight: 600;
+  margin-top: 6px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
 }
 
 .venda-recente-header {
@@ -180,4 +204,34 @@
   padding: 3px 10px;
   font-size: 0.75rem;
   color: var(--text-secondary);
+}
+
+/* Modal de detalhe da venda */
+.detalhe-venda-info {
+  margin-bottom: 16px;
+  p { margin: 4px 0; font-size: 0.9rem; }
+}
+
+.section-title {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  margin: 16px 0 8px;
+}
+
+.resumo-venda {
+  background: var(--surface-bg);
+  border-radius: var(--border-radius-md);
+  padding: 12px 16px;
+
+  div { display: flex; justify-content: space-between; padding: 4px 0; }
+
+  .total-linha {
+    border-top: 1px solid var(--border-color);
+    margin-top: 4px;
+    padding-top: 8px;
+    font-size: 1.05rem;
+    strong { color: var(--brand-blue); }
+  }
 }

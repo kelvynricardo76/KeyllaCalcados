@@ -64,7 +64,17 @@ export class PdvComponent implements OnInit {
   private carregarCaixas() {
     this.loading.set(true);
     this.pdvService.listarCaixas().subscribe({
-      next: caixas => { this.caixas.set(caixas); this.loading.set(false); },
+      next: caixas => {
+        this.caixas.set(caixas);
+        this.loading.set(false);
+        // Se já existe uma sessão de caixa aberta, entra direto nela em vez de
+        // exigir que o usuário clique de novo no caixa — "Ir para o PDV" deve
+        // levar direto ao ponto de venda quando já há um caixa em uso.
+        const caixaAberto = caixas.find(c => c.sessaoAbertaId);
+        if (caixaAberto) {
+          this.selecionarCaixa(caixaAberto);
+        }
+      },
       error: () => { this.error.set('Não foi possível carregar os caixas.'); this.loading.set(false); }
     });
   }

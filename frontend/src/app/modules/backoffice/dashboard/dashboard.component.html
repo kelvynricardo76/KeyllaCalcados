@@ -99,7 +99,7 @@
           <p class="text-muted text-center p-3">Nenhuma venda fechada ainda hoje.</p>
         }
         @for (venda of kpis()!.ultimasVendas; track venda.id) {
-          <div class="venda-recente-item">
+          <button type="button" class="venda-recente-item" (click)="abrirDetalheVenda(venda)">
             <div class="venda-recente-header">
               <span class="venda-hora">{{ venda.createdAt | date:'HH:mm' }}</span>
               <span class="venda-cliente">
@@ -114,9 +114,75 @@
                 <span class="item-chip">{{ descricaoItem(item) }}</span>
               }
             </div>
-          </div>
+            <span class="venda-ver-detalhe">Ver detalhes →</span>
+          </button>
         }
       </div>
     </div>
+  }
+
+  <!-- ── Modal: detalhe completo da venda ─────────────────────── -->
+  @if (vendaSelecionada(); as v) {
+    <app-modal [titulo]="'Venda #' + v.id" (fechar)="fecharDetalheVenda()">
+      <div class="detalhe-venda-info">
+        <p><strong>Data/Hora:</strong> {{ v.createdAt | date:'dd/MM/yyyy HH:mm' }}</p>
+        <p><strong>Cliente:</strong> {{ v.clienteNome }} @if (v.clienteTelefone) { ({{ v.clienteTelefone }}) }</p>
+        <p><strong>Vendedor:</strong> {{ v.usuarioNome }}</p>
+        <p><strong>Loja:</strong> {{ v.lojaNome }}</p>
+        @if (v.observacoes) { <p><strong>Observações:</strong> {{ v.observacoes }}</p> }
+      </div>
+
+      <h4 class="section-title">Itens</h4>
+      <div class="table-container mb-3">
+        <table class="data-table">
+          <thead><tr><th>Produto</th><th>Tamanho</th><th>Cor</th><th>Qtd.</th></tr></thead>
+          <tbody>
+            @for (item of v.itens; track $index) {
+              <tr>
+                <td>{{ item.nomeProduto }}</td>
+                <td>{{ item.tamanho ?? '—' }}</td>
+                <td>{{ item.cor ?? '—' }}</td>
+                <td>{{ item.quantidade }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <h4 class="section-title">Pagamento</h4>
+      <div class="table-container mb-3">
+        <table class="data-table">
+          <thead><tr><th>Forma</th><th>Valor</th><th>Parcelas</th><th>Referência</th></tr></thead>
+          <tbody>
+            @if (v.pagamentos.length === 0) {
+              <tr><td colspan="4" class="text-center text-muted">Sem pagamentos registrados.</td></tr>
+            }
+            @for (p of v.pagamentos; track $index) {
+              <tr>
+                <td>{{ labelForma(p.forma) }}</td>
+                <td>{{ p.valor | currency:'BRL' }}</td>
+                <td>{{ p.parcelas }}x</td>
+                <td>{{ p.referencia ?? '—' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="resumo-venda">
+        <div><span>Subtotal</span><strong>{{ v.subtotal | currency:'BRL' }}</strong></div>
+        @if (v.descontoGeral > 0) {
+          <div><span>Desconto</span><strong>− {{ v.descontoGeral | currency:'BRL' }}</strong></div>
+        }
+        <div class="total-linha"><span>Total</span><strong>{{ v.valorTotal | currency:'BRL' }}</strong></div>
+        @if (v.troco && v.troco > 0) {
+          <div><span>Troco</span><strong>{{ v.troco | currency:'BRL' }}</strong></div>
+        }
+      </div>
+
+      <div modal-footer>
+        <button type="button" class="btn btn-outline" (click)="fecharDetalheVenda()">Fechar</button>
+      </div>
+    </app-modal>
   }
 </div>

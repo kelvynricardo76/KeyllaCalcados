@@ -12,6 +12,7 @@ import br.com.keila.modules.relatorio.dto.ClienteRankingResponse;
 import br.com.keila.modules.relatorio.dto.DashboardResponse;
 import br.com.keila.modules.relatorio.dto.FuncionarioRankingResponse;
 import br.com.keila.modules.relatorio.dto.ItemVendaResumo;
+import br.com.keila.modules.relatorio.dto.PagamentoResumo;
 import br.com.keila.modules.relatorio.dto.PontoVendaHora;
 import br.com.keila.modules.relatorio.dto.ProdutoParadoResponse;
 import br.com.keila.modules.relatorio.dto.ProdutoRankingResponse;
@@ -239,11 +240,16 @@ public class RelatorioService {
         List<ItemVendaResumo> itens = v.getItens().stream()
                 .map(i -> new ItemVendaResumo(i.getNomeProdutoSnapshot(), i.getTamanhoSnapshot(), i.getCorSnapshot(), i.getQuantidade()))
                 .toList();
+        List<PagamentoResumo> pagamentos = v.getPagamentos().stream()
+                .map(p -> new PagamentoResumo(p.getForma().name(), p.getValor(), p.getParcelas(), p.getReferencia()))
+                .toList();
         return new VendaDetalheResponse(
                 v.getId(), v.getCreatedAt(),
                 v.getCliente() != null ? v.getCliente().getNome() : "Consumidor final",
                 v.getCliente() != null ? v.getCliente().getTelefone() : null,
-                v.getUsuario().getNome(), v.getValorTotal(), itens);
+                v.getUsuario().getNome(), v.getLoja().getNome(),
+                v.getSubtotal(), v.getDescontoGeral(), v.getValorTotal(), v.getTroco(), v.getObservacoes(),
+                itens, pagamentos);
     }
 
     private List<Venda> buscarVendasFechadasDoDia(LocalDate dia) {

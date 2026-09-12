@@ -42,3 +42,21 @@ export interface ProdutoVencendo {
   diasParaVencer: number;
   vencido: boolean;
 }
+
+export interface ClienteRanking {
+  clienteId: number;
+  nome: string;
+  telefone?: string | null;
+  quantidadeCompras: number;
+  valorTotal: number;
+  ticketMedio: number;
+}
+
+export interface ProdutoParado {
+  produtoId: number;
+  nomeProduto: string;
+  marcaNome?: string | null;
+  ultimaVenda?: string | null;
+  diasSemVenda?: number | null;
+  quantidadeEmEstoque: number;
+}

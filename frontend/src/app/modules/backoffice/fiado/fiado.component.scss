@@ -25,6 +25,33 @@
   margin-top: 8px;
 }
 
+.novo-cliente-box {
+  background: var(--surface-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+
+.cliente-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--primary-color);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  text-transform: none;
+
+  &:hover { text-decoration: underline; }
+}
+
 .section-title {
   font-size: 0.85rem;
   text-transform: uppercase;

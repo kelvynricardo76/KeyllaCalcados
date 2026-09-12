@@ -11,6 +11,28 @@
   input { max-width: 360px; }
 }
 
+.tabs-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.filtro-periodo {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 16px 20px !important;
+
+  .form-group { margin-bottom: 0; }
+}
+
+.ordenacao-toggle {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;

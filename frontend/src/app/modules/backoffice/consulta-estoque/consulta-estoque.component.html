@@ -1,0 +1,144 @@
+<div class="consulta-page animate-fade-in">
+
+  <div class="page-header">
+    <div>
+      <h1>Consulta de Estoque</h1>
+      <p class="text-muted">Busque um produto para ver a disponibilidade por numeração e cor.</p>
+    </div>
+  </div>
+
+  @if (error()) {
+    <div class="form-error mb-2">⚠ {{ error() }}</div>
+  }
+
+  <div class="marcas-row">
+    <button class="marca-chip" [class.active]="marcaSelecionada() === null" (click)="marcaSelecionada.set(null)">
+      Todas as marcas
+    </button>
+    @for (m of marcas(); track m.id) {
+      <button class="marca-chip" [class.active]="marcaSelecionada() === m.id" (click)="marcaSelecionada.set(m.id)">
+        {{ m.nome }}
+      </button>
+    }
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-body busca-bar">
+      <input type="text" class="form-control" placeholder="Buscar produto por nome (ex.: Kenner, coturno...)"
+             id="input-busca-consulta"
+             [ngModel]="busca()" (ngModelChange)="busca.set($event)">
+      <button class="btn btn-outline btn-sm" (click)="limparFiltros()">Limpar</button>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <p class="text-muted text-center">Carregando...</p>
+  } @else if (produtosAgrupados().length === 0) {
+    <p class="text-muted text-center">Nenhum produto encontrado.</p>
+  } @else {
+    <div class="produtos-grid">
+      @for (p of produtosAgrupados(); track p.produtoId) {
+        <button class="produto-card" (click)="abrirProduto(p)">
+          <img [src]="imagemDoProduto(p.produtoNome, p.fotoPrincipalUrl, p.categoriaNome)" alt="" class="produto-imagem">
+          <div class="produto-info">
+            <span class="produto-nome">{{ p.produtoNome }}</span>
+            <span class="produto-marca text-muted">{{ p.marcaNome ?? '—' }}</span>
+            <span class="produto-qtd" [class.qty-zero]="p.quantidadeTotal === 0">{{ p.quantidadeTotal }} un. no total</span>
+          </div>
+        </button>
+      }
+    </div>
+  }
+
+  <!-- ── Painel: detalhe do produto + drill-down por numeração/cor ─── -->
+  @if (produtoSelecionado(); as p) {
+    <div class="detalhe-overlay" (click)="fecharProduto()">
+      <div class="detalhe-panel" (click)="$event.stopPropagation()">
+        <div class="detalhe-header">
+          <img [src]="imagemDoProduto(p.produtoNome, p.fotoPrincipalUrl, p.categoriaNome)" alt="" class="detalhe-imagem">
+          <div>
+            <h3>{{ p.produtoNome }}</h3>
+            <p class="text-muted">{{ p.marcaNome ?? '—' }} · {{ p.categoriaNome ?? '—' }}</p>
+          </div>
+          <button type="button" class="btn btn-icon btn-outline" (click)="fecharProduto()" aria-label="Fechar">✕</button>
+        </div>
+
+        <div class="detalhe-body">
+          <h4>Numeração</h4>
+          <div class="tamanhos-row">
+            @for (t of tamanhosDoProduto(); track t) {
+              <button class="tamanho-chip" [class.active]="tamanhoDrill() === t" (click)="selecionarTamanho(t)">{{ t }}</button>
+            }
+          </div>
+
+          @if (tamanhoDrill()) {
+            <h4>Cor</h4>
+            <div class="cores-row">
+              <button class="cor-chip" [class.active]="corDrill() === null" (click)="corDrill.set(null)">Todas</button>
+              @for (c of coresDoTamanho(); track c.id) {
+                <button class="cor-chip" [class.active]="corDrill() === c.id" (click)="corDrill.set(c.id)">
+                  @if (c.hex) { <span class="cor-swatch" [style.background]="c.hex"></span> }
+                  {{ c.nome }}
+                </button>
+              }
+            </div>
+          }
+
+          <div class="table-container mt-2">
+            <table class="data-table">
+              <thead><tr><th>Tamanho</th><th>Cor</th><th>Loja</th><th>Qtd. Disponível</th></tr></thead>
+              <tbody>
+                @if (variacoesFiltradasDoDrill().length === 0) {
+                  <tr><td colspan="4" class="text-center text-muted">Selecione uma numeração para consultar.</td></tr>
+                }
+                @for (item of variacoesFiltradasDoDrill(); track item.id) {
+                  <tr>
+                    <td>{{ item.tamanhoValor ?? '—' }}</td>
+                    <td>
+                      @if (item.corHex) { <span class="cor-swatch" [style.background]="item.corHex"></span> }
+                      {{ item.corNome ?? '—' }}
+                    </td>
+                    <td>{{ item.lojaNome }}</td>
+                    <td class="grade-cell" [class.qty-zero]="item.quantidade === 0" [class.qty-ok]="item.quantidade > 0">
+                      {{ item.quantidade }}
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          @if (semSaldoNaSelecao()) {
+            <div class="alerta-sem-estoque">
+              ⚠ Sem saldo disponível nessa numeração{{ corDrill() ? ' / cor' : '' }}.
+              @if (sugestoes().length > 0) {
+                <span> Veja sugestões similares abaixo.</span>
+              }
+            </div>
+
+            @if (sugestoes().length > 0) {
+              <h4>Sugestões similares</h4>
+              <div class="sugestoes-grid">
+                @for (s of sugestoes(); track s.produtoId + '-' + (s.corNome ?? '')) {
+                  <div class="sugestao-card" [class.cor-igual]="s.corIgual">
+                    <img [src]="imagemDoProduto(s.produtoNome, s.fotoPrincipalUrl, s.categoriaNome)" alt="" class="sugestao-imagem">
+                    <div class="sugestao-info">
+                      <span class="sugestao-nome">{{ s.produtoNome }}</span>
+                      <span class="sugestao-detalhe text-muted">
+                        {{ s.tamanhoValor }} ·
+                        @if (s.corHex) { <span class="cor-swatch" [style.background]="s.corHex"></span> }
+                        {{ s.corNome ?? '—' }}
+                        @if (s.corIgual) { <span class="badge badge-success">mesma cor</span> }
+                      </span>
+                      <span class="sugestao-qtd">{{ s.quantidade }} disponíveis</span>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          }
+        </div>
+      </div>
+    </div>
+  }
+</div>

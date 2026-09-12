@@ -87,12 +87,9 @@
       <div class="pdv-carrinho">
         <div class="carrinho-header">
           <h3>Venda #{{ venda()!.id }}</h3>
-          <select class="form-control" (change)="selecionarCliente($any($event.target).value)">
-            <option value="">Consumidor final</option>
-            @for (c of clientes(); track c.id) {
-              <option [value]="c.id">{{ c.nome }}</option>
-            }
-          </select>
+          <button type="button" class="btn btn-outline btn-sm cliente-btn" (click)="abrirClienteModal()" id="btn-cliente-venda">
+            👤 {{ nomeClienteSelecionado() }}
+          </button>
         </div>
 
         <div class="carrinho-itens">
@@ -179,6 +176,59 @@
         <button class="btn btn-outline" (click)="fecharPagamento()">Cancelar</button>
         <button class="btn btn-primary" [disabled]="faltaPagar() > 0" (click)="confirmarFinalizacao()" id="btn-confirmar-venda">
           Confirmar Pagamento
+        </button>
+      </div>
+    </app-modal>
+  }
+
+  <!-- ── Modal: cliente da venda (nome + telefone) ────────────────── -->
+  @if (showCliente()) {
+    <app-modal titulo="Cliente da Venda" (fechar)="fecharClienteModal()">
+      @if (clienteError()) {
+        <div class="form-error mb-2">⚠ {{ clienteError() }}</div>
+      }
+
+      @if (clienteSelecionadoId()) {
+        <div class="cliente-atual">
+          <span>Cliente atual: <strong>{{ nomeClienteSelecionado() }}</strong></span>
+          <button type="button" class="btn btn-outline btn-sm" (click)="removerClienteDaVenda()">Usar consumidor final</button>
+        </div>
+      }
+
+      <div class="form-group">
+        <label class="form-label">Buscar cliente por nome ou telefone</label>
+        <input type="text" class="form-control" id="input-busca-cliente-pdv"
+               [ngModel]="clienteBusca()" (ngModelChange)="clienteBusca.set($event)">
+      </div>
+
+      <div class="lista-clientes">
+        @for (c of clientesFiltrados(); track c.id) {
+          <button type="button" class="cliente-linha" (click)="selecionarClienteExistente(c)">
+            <span>{{ c.nome }}</span>
+            <span class="text-muted">{{ c.telefone ?? '—' }}</span>
+          </button>
+        }
+        @if (clientesFiltrados().length === 0) {
+          <p class="text-muted text-center">Nenhum cliente encontrado.</p>
+        }
+      </div>
+
+      <h4 class="section-title">Cadastrar novo cliente</h4>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nome *</label>
+          <input type="text" class="form-control" id="input-novo-cliente-nome" [(ngModel)]="novoClienteNome">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Telefone *</label>
+          <input type="text" class="form-control" id="input-novo-cliente-telefone" [(ngModel)]="novoClienteTelefone" placeholder="(11) 98765-4321">
+        </div>
+      </div>
+
+      <div modal-footer>
+        <button type="button" class="btn btn-outline" (click)="fecharClienteModal()">Cancelar</button>
+        <button type="button" class="btn btn-primary" (click)="cadastrarClienteRapido()" id="btn-cadastrar-cliente-pdv">
+          + Cadastrar e Selecionar
         </button>
       </div>
     </app-modal>

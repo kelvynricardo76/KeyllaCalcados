@@ -8,58 +8,113 @@
     <button class="btn btn-primary" id="btn-novo-cliente" (click)="abrirNovo()">+ Novo Cliente</button>
   </div>
 
-  <div class="card mb-3">
-    <div class="card-body toolbar">
-      <input type="text" class="form-control" placeholder="Buscar por nome, CPF ou telefone..."
-             id="input-busca-cliente"
-             [value]="busca()" (input)="onBuscaChange($any($event.target).value)">
-    </div>
+  <div class="tabs-row">
+    <button class="btn btn-sm" [class.btn-primary]="aba() === 'LISTA'" [class.btn-outline]="aba() !== 'LISTA'"
+            (click)="mudarAba('LISTA')">Lista</button>
+    <button class="btn btn-sm" [class.btn-primary]="aba() === 'RANKING'" [class.btn-outline]="aba() !== 'RANKING'"
+            (click)="mudarAba('RANKING')">Ranking de Clientes</button>
   </div>
 
-  <div class="table-container">
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>Nome</th>
-          <th>CPF/CNPJ</th>
-          <th>Telefone</th>
-          <th>Cidade/UF</th>
-          <th>Limite Fiado</th>
-          <th>Status</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        @if (loading()) {
-          <tr><td colspan="7" class="text-center text-muted">Carregando...</td></tr>
-        } @else if (clientes().length === 0) {
-          <tr><td colspan="7" class="text-center text-muted">Nenhum cliente encontrado.</td></tr>
-        } @else {
-          @for (cliente of clientes(); track cliente.id) {
-            <tr>
-              <td>{{ cliente.nome }}</td>
-              <td>{{ cliente.cpf ?? cliente.cnpj ?? '—' }}</td>
-              <td>{{ cliente.telefone ?? '—' }}</td>
-              <td>{{ cliente.cidade ? (cliente.cidade + '/' + (cliente.uf ?? '')) : '—' }}</td>
-              <td>{{ cliente.limiteFiado != null ? (cliente.limiteFiado | currency:'BRL') : '—' }}</td>
-              <td>
-                <span class="badge" [class.badge-success]="cliente.ativo" [class.badge-danger]="!cliente.ativo">
-                  {{ cliente.ativo ? 'Ativo' : 'Inativo' }}
-                </span>
-              </td>
-              <td class="d-flex gap-1">
-                <button class="btn btn-outline btn-sm" (click)="editar(cliente)">Editar</button>
-                <button class="btn btn-sm" [class.btn-danger]="cliente.ativo" [class.btn-success]="!cliente.ativo"
-                        (click)="toggleAtivo(cliente)">
-                  {{ cliente.ativo ? 'Desativar' : 'Ativar' }}
-                </button>
-              </td>
-            </tr>
+  @if (aba() === 'LISTA') {
+    <div class="card mb-3">
+      <div class="card-body toolbar">
+        <input type="text" class="form-control" placeholder="Buscar por nome, CPF ou telefone..."
+               id="input-busca-cliente"
+               [value]="busca()" (input)="onBuscaChange($any($event.target).value)">
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>CPF/CNPJ</th>
+            <th>Telefone</th>
+            <th>Cidade/UF</th>
+            <th>Limite Fiado</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (loading()) {
+            <tr><td colspan="7" class="text-center text-muted">Carregando...</td></tr>
+          } @else if (clientes().length === 0) {
+            <tr><td colspan="7" class="text-center text-muted">Nenhum cliente encontrado.</td></tr>
+          } @else {
+            @for (cliente of clientes(); track cliente.id) {
+              <tr>
+                <td>{{ cliente.nome }}</td>
+                <td>{{ cliente.cpf ?? cliente.cnpj ?? '—' }}</td>
+                <td>{{ cliente.telefone ?? '—' }}</td>
+                <td>{{ cliente.cidade ? (cliente.cidade + '/' + (cliente.uf ?? '')) : '—' }}</td>
+                <td>{{ cliente.limiteFiado != null ? (cliente.limiteFiado | currency:'BRL') : '—' }}</td>
+                <td>
+                  <span class="badge" [class.badge-success]="cliente.ativo" [class.badge-danger]="!cliente.ativo">
+                    {{ cliente.ativo ? 'Ativo' : 'Inativo' }}
+                  </span>
+                </td>
+                <td class="d-flex gap-1">
+                  <button class="btn btn-outline btn-sm" (click)="editar(cliente)">Editar</button>
+                  <button class="btn btn-sm" [class.btn-danger]="cliente.ativo" [class.btn-success]="!cliente.ativo"
+                          (click)="toggleAtivo(cliente)">
+                    {{ cliente.ativo ? 'Desativar' : 'Ativar' }}
+                  </button>
+                </td>
+              </tr>
+            }
           }
-        }
-      </tbody>
-    </table>
-  </div>
+        </tbody>
+      </table>
+    </div>
+  } @else {
+    <div class="card mb-3">
+      <div class="card-body filtro-periodo">
+        <div class="form-group">
+          <label class="form-label">De</label>
+          <input type="date" class="form-control" [(ngModel)]="rankingInicio">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Até</label>
+          <input type="date" class="form-control" [(ngModel)]="rankingFim">
+        </div>
+        <button class="btn btn-primary" (click)="buscarRanking()">Filtrar</button>
+        <div class="ordenacao-toggle">
+          <button class="btn btn-sm" [class.btn-primary]="ordenacaoRanking() === 'QUANTIDADE'" [class.btn-outline]="ordenacaoRanking() !== 'QUANTIDADE'"
+                  (click)="ordenacaoRanking.set('QUANTIDADE')">Quem mais compra</button>
+          <button class="btn btn-sm" [class.btn-primary]="ordenacaoRanking() === 'TICKET'" [class.btn-outline]="ordenacaoRanking() !== 'TICKET'"
+                  (click)="ordenacaoRanking.set('TICKET')">Maior ticket médio</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr><th>#</th><th>Cliente</th><th>Telefone</th><th>Qtd. Compras</th><th>Valor Total</th><th>Ticket Médio</th></tr>
+        </thead>
+        <tbody>
+          @if (rankingLoading()) {
+            <tr><td colspan="6" class="text-center text-muted">Carregando...</td></tr>
+          } @else if (rankingOrdenado().length === 0) {
+            <tr><td colspan="6" class="text-center text-muted">Nenhuma compra registrada no período.</td></tr>
+          } @else {
+            @for (c of rankingOrdenado(); track c.clienteId; let i = $index) {
+              <tr>
+                <td>{{ i + 1 }}º</td>
+                <td>{{ c.nome }}</td>
+                <td>{{ c.telefone ?? '—' }}</td>
+                <td>{{ c.quantidadeCompras }}</td>
+                <td>{{ c.valorTotal | currency:'BRL' }}</td>
+                <td>{{ c.ticketMedio | currency:'BRL' }}</td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  }
 
   @if (showForm()) {
     <app-modal [titulo]="editingId() ? 'Editar Cliente' : 'Novo Cliente'" (fechar)="fecharForm()">

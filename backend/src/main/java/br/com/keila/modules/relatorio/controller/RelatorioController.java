@@ -1,7 +1,9 @@
 package br.com.keila.modules.relatorio.controller;
 
+import br.com.keila.modules.relatorio.dto.ClienteRankingResponse;
 import br.com.keila.modules.relatorio.dto.DashboardResponse;
 import br.com.keila.modules.relatorio.dto.FuncionarioRankingResponse;
+import br.com.keila.modules.relatorio.dto.ProdutoParadoResponse;
 import br.com.keila.modules.relatorio.dto.ProdutoVencendoResponse;
 import br.com.keila.modules.relatorio.dto.RelatorioVendasResponse;
 import br.com.keila.modules.relatorio.service.RelatorioService;
@@ -44,5 +46,17 @@ public class RelatorioController {
     @GetMapping("/produtos-vencendo")
     public List<ProdutoVencendoResponse> produtosVencendo(@RequestParam(defaultValue = "30") int dias) {
         return relatorioService.produtosVencendo(dias);
+    }
+
+    @GetMapping("/clientes")
+    public List<ClienteRankingResponse> relatorioClientes(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fim) {
+        return relatorioService.relatorioClientes(inicio, fim);
+    }
+
+    @GetMapping("/produtos-parados")
+    public List<ProdutoParadoResponse> produtosParados(@RequestParam(defaultValue = "60") int dias) {
+        return relatorioService.produtosParados(dias);
     }
 }

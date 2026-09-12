@@ -1,5 +1,6 @@
 package br.com.keila.modules.estoque.dto;
 
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 
 public record EstoqueResponse(
@@ -8,6 +9,7 @@ public record EstoqueResponse(
         Long produtoId,
         String produtoNome,
         String fotoPrincipalUrl,
+        LocalDate produtoDataValidade,
         Long marcaId,
         String marcaNome,
         Long categoriaId,

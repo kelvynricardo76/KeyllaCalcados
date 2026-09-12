@@ -7,6 +7,16 @@
     </div>
   </div>
 
+  @if (alertaVencendoCount() > 0) {
+    <div class="alerta-banner" [class.alerta-critico]="alertaVencidoCount() > 0">
+      ⚠ <strong>{{ alertaVencendoCount() }}</strong> produto(s) com validade próxima do vencimento
+      @if (alertaVencidoCount() > 0) {
+        , sendo <strong>{{ alertaVencidoCount() }}</strong> já vencido(s)
+      }
+      . Veja a lista completa mais abaixo.
+    </div>
+  }
+
   <div class="card mb-3">
     <div class="card-body filtro-periodo">
       <div class="form-group">
@@ -155,6 +165,42 @@
                   {{ v.vencido ? 'Vencido' : 'Vence em ' + v.diasParaVencer + ' dia(s)' }}
                 </span>
               </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── Produtos parados (sem venda há X dias) ──────────────────── -->
+  <div class="card mt-3">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h3>Produtos Parados (sem venda há um tempo)</h3>
+      <div class="parados-filtro">
+        <label class="form-label mb-0">Sem venda há mais de</label>
+        <input type="number" min="1" class="form-control" [ngModel]="diasParados()" (ngModelChange)="diasParados.set($event)">
+        <span>dias</span>
+        <button class="btn btn-primary btn-sm" (click)="buscarParados()">Aplicar</button>
+      </div>
+    </div>
+    <div class="table-container">
+      <table class="data-table">
+        <thead><tr><th>Produto</th><th>Marca</th><th>Última Venda</th><th>Dias Sem Vender</th><th>Em Estoque</th></tr></thead>
+        <tbody>
+          @if (paradosLoading()) {
+            <tr><td colspan="5" class="text-center text-muted">Carregando...</td></tr>
+          } @else if (parados().length === 0) {
+            <tr><td colspan="5" class="text-center text-muted">Nenhum produto parado com os critérios atuais.</td></tr>
+          }
+          @for (p of parados(); track p.produtoId) {
+            <tr>
+              <td>{{ p.nomeProduto }}</td>
+              <td>{{ p.marcaNome ?? '—' }}</td>
+              <td>{{ p.ultimaVenda ? (p.ultimaVenda | date:'dd/MM/yyyy') : 'Nunca vendido' }}</td>
+              <td>
+                <span class="badge badge-warning">{{ p.diasSemVenda != null ? p.diasSemVenda + ' dias' : 'Nunca vendido' }}</span>
+              </td>
+              <td>{{ p.quantidadeEmEstoque }}</td>
             </tr>
           }
         </tbody>

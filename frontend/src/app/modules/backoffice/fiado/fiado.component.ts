@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FiadoService } from './fiado.service';
 import { Fiado, Pagamento } from './fiado.model';
 import { ClienteService } from '../clientes/cliente.service';
@@ -11,7 +11,7 @@ import { ModalComponent } from '../../../shared/components/modal/modal.component
 @Component({
   selector: 'app-fiado',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, ModalComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, ModalComponent],
   templateUrl: './fiado.component.html',
   styleUrl: './fiado.component.scss'
 })
@@ -34,6 +34,11 @@ export class FiadoComponent implements OnInit {
   showForm = signal(false);
   showPagamento = signal(false);
   fiadoSelecionado = signal<Fiado | null>(null);
+
+  showNovoCliente = signal(false);
+  novoClienteNome = '';
+  novoClienteTelefone = '';
+  novoClienteError = signal('');
 
   form = this.fb.nonNullable.group({
     clienteId: [null as number | null, Validators.required],
@@ -91,6 +96,35 @@ export class FiadoComponent implements OnInit {
 
   fecharForm() {
     this.showForm.set(false);
+  }
+
+  abrirNovoCliente() {
+    this.novoClienteNome = '';
+    this.novoClienteTelefone = '';
+    this.novoClienteError.set('');
+    this.showNovoCliente.set(true);
+  }
+
+  cancelarNovoCliente() {
+    this.showNovoCliente.set(false);
+  }
+
+  cadastrarClienteRapido() {
+    const nome = this.novoClienteNome.trim();
+    const telefone = this.novoClienteTelefone.trim();
+    if (!nome || !telefone) {
+      this.novoClienteError.set('Informe nome e telefone do cliente.');
+      return;
+    }
+    this.novoClienteError.set('');
+    this.clienteService.criar({ nome, telefone }).subscribe({
+      next: cliente => {
+        this.clientes.update(lista => [...lista, cliente]);
+        this.form.controls.clienteId.setValue(cliente.id);
+        this.showNovoCliente.set(false);
+      },
+      error: err => this.novoClienteError.set(err.error?.message ?? 'Não foi possível cadastrar o cliente.')
+    });
   }
 
   salvar() {

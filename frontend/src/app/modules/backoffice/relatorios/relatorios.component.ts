@@ -1,8 +1,8 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RelatorioService } from './relatorio.service';
-import { ProdutoVencendo, RelatorioVendas } from './relatorio.model';
+import { ProdutoParado, ProdutoVencendo, RelatorioVendas } from './relatorio.model';
 
 function formatarData(d: Date): string {
   return d.toISOString().substring(0, 10);
@@ -25,6 +25,13 @@ export class RelatoriosComponent implements OnInit {
   vencendo = signal<ProdutoVencendo[]>([]);
   diasVencimento = signal(30);
 
+  parados = signal<ProdutoParado[]>([]);
+  diasParados = signal(60);
+  paradosLoading = signal(false);
+
+  alertaVencendoCount = computed(() => this.vencendo().length);
+  alertaVencidoCount = computed(() => this.vencendo().filter(v => v.vencido).length);
+
   inicio: string;
   fim: string;
 
@@ -38,6 +45,7 @@ export class RelatoriosComponent implements OnInit {
   ngOnInit() {
     this.buscar();
     this.buscarVencendo();
+    this.buscarParados();
   }
 
   buscar() {
@@ -51,5 +59,13 @@ export class RelatoriosComponent implements OnInit {
 
   buscarVencendo() {
     this.relatorioService.produtosVencendo(this.diasVencimento()).subscribe(lista => this.vencendo.set(lista));
+  }
+
+  buscarParados() {
+    this.paradosLoading.set(true);
+    this.relatorioService.produtosParados(this.diasParados()).subscribe({
+      next: lista => { this.parados.set(lista); this.paradosLoading.set(false); },
+      error: () => this.paradosLoading.set(false)
+    });
   }
 }

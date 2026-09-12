@@ -96,6 +96,14 @@ public class DataSeeder implements ApplicationRunner {
                 .ativo(true)
                 .build());
 
+        usuarioRepository.save(Usuario.builder()
+                .nome("Vendedor Demo")
+                .email("vendedor")
+                .senhaHash(passwordEncoder.encode("vendedor"))
+                .perfil(PerfilUsuario.VENDEDOR)
+                .ativo(true)
+                .build());
+
         seedCategorias();
         seedMarcas();
         seedTamanhos();
@@ -108,7 +116,7 @@ public class DataSeeder implements ApplicationRunner {
         seedCliente();
         seedFornecedor();
 
-        log.info("Dados iniciais carregados. Login: admin / admin");
+        log.info("Dados iniciais carregados. Login: admin / admin (ou vendedor / vendedor para o perfil de consulta)");
     }
 
     private void seedCategorias() {

@@ -1,19 +1,26 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ClienteService } from './cliente.service';
 import { Cliente } from './cliente.model';
 import { ModalComponent } from '../../../shared/components/modal/modal.component';
+import { RelatorioService } from '../relatorios/relatorio.service';
+import { ClienteRanking } from '../relatorios/relatorio.model';
+
+function formatarData(d: Date): string {
+  return d.toISOString().substring(0, 10);
+}
 
 @Component({
   selector: 'app-clientes',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, ModalComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, ModalComponent],
   templateUrl: './clientes.component.html',
   styleUrl: './clientes.component.scss'
 })
 export class ClientesComponent implements OnInit {
   private clienteService = inject(ClienteService);
+  private relatorioService = inject(RelatorioService);
   private fb = inject(FormBuilder);
 
   clientes = signal<Cliente[]>([]);
@@ -25,7 +32,22 @@ export class ClientesComponent implements OnInit {
   showForm = signal(false);
   editingId = signal<number | null>(null);
 
+  // ── Ranking de clientes ────────────────────────────────────────────
+  aba = signal<'LISTA' | 'RANKING'>('LISTA');
+  ranking = signal<ClienteRanking[]>([]);
+  rankingLoading = signal(false);
+  ordenacaoRanking = signal<'QUANTIDADE' | 'TICKET'>('QUANTIDADE');
+  rankingInicio: string;
+  rankingFim: string;
+
   private buscaTimeout: ReturnType<typeof setTimeout> | undefined;
+
+  constructor() {
+    const hoje = new Date();
+    const primeiroDiaMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+    this.rankingInicio = formatarData(primeiroDiaMes);
+    this.rankingFim = formatarData(hoje);
+  }
 
   form = this.fb.nonNullable.group({
     nome: ['', [Validators.required, Validators.maxLength(120)]],
@@ -127,4 +149,26 @@ export class ClientesComponent implements OnInit {
   }
 
   get nomeCtrl() { return this.form.controls.nome; }
+
+  // ── Ranking de clientes ────────────────────────────────────────────
+  mudarAba(aba: 'LISTA' | 'RANKING') {
+    this.aba.set(aba);
+    if (aba === 'RANKING' && this.ranking().length === 0) {
+      this.buscarRanking();
+    }
+  }
+
+  buscarRanking() {
+    this.rankingLoading.set(true);
+    this.relatorioService.clientesRanking(this.rankingInicio, this.rankingFim).subscribe({
+      next: lista => { this.ranking.set(lista); this.rankingLoading.set(false); },
+      error: () => { this.rankingLoading.set(false); }
+    });
+  }
+
+  rankingOrdenado(): ClienteRanking[] {
+    const criterio = this.ordenacaoRanking();
+    return [...this.ranking()].sort((a, b) =>
+      criterio === 'QUANTIDADE' ? b.quantidadeCompras - a.quantidadeCompras : b.ticketMedio - a.ticketMedio);
+  }
 }

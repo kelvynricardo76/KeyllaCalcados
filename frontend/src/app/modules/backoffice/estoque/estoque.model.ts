@@ -14,6 +14,7 @@ export interface EstoqueItem {
   produtoId: number;
   produtoNome: string;
   fotoPrincipalUrl?: string | null;
+  produtoDataValidade?: string | null;
   marcaId?: number | null;
   marcaNome?: string | null;
   categoriaId?: number | null;

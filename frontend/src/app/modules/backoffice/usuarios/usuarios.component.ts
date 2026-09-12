@@ -24,7 +24,7 @@ export class UsuariosComponent implements OnInit {
   showForm = signal(false);
   editingId = signal<number | null>(null);
 
-  perfis: PerfilUsuario[] = ['ADMIN', 'GERENTE', 'CAIXA', 'ESTOQUISTA'];
+  perfis: PerfilUsuario[] = ['ADMIN', 'GERENTE', 'CAIXA', 'ESTOQUISTA', 'VENDEDOR'];
 
   form = this.fb.nonNullable.group({
     nome: ['', [Validators.required, Validators.maxLength(120)]],

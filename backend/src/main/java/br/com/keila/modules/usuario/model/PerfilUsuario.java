@@ -5,5 +5,7 @@ public enum PerfilUsuario {
     ADMIN,
     GERENTE,
     CAIXA,
-    ESTOQUISTA
+    ESTOQUISTA,
+    /** Só pode consultar o estoque disponível (sem acesso a vendas, clientes, financeiro etc.). */
+    VENDEDOR
 }

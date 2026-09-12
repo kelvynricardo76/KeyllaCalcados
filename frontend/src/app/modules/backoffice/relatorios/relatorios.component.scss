@@ -53,3 +53,28 @@
 .vencimento-filtro select {
   min-width: 180px;
 }
+
+.alerta-banner {
+  background: rgba(217, 119, 6, 0.1);
+  border: 1px solid rgba(217, 119, 6, 0.35);
+  color: #92400e;
+  border-radius: var(--border-radius-md);
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  font-weight: 500;
+
+  &.alerta-critico {
+    background: rgba(220, 38, 38, 0.08);
+    border-color: rgba(220, 38, 38, 0.3);
+    color: var(--danger-color, #dc2626);
+  }
+}
+
+.parados-filtro {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  input { width: 80px; }
+}

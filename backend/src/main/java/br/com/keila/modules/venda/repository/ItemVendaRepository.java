@@ -20,10 +20,23 @@ public interface ItemVendaRepository extends JpaRepository<ItemVenda, Long> {
             """)
     List<RankingProduto> ranquearProdutos(@Param("inicio") Instant inicio, @Param("fim") Instant fim);
 
+    @Query("""
+            select i.produto.id as produtoId, max(i.venda.createdAt) as ultimaVenda
+            from ItemVenda i
+            where i.venda.status = 'FECHADA'
+            group by i.produto.id
+            """)
+    List<UltimaVendaProduto> buscarUltimaVendaPorProduto();
+
     interface RankingProduto {
         Long getProdutoId();
         String getNome();
         Long getQuantidade();
         java.math.BigDecimal getTotal();
+    }
+
+    interface UltimaVendaProduto {
+        Long getProdutoId();
+        Instant getUltimaVenda();
     }
 }

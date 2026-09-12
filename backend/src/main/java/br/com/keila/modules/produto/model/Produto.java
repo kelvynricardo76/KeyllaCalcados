@@ -58,7 +58,9 @@ public class Produto {
     @Column(name = "tem_grade", nullable = false)
     private boolean temGrade;
 
-    @Column(name = "foto_principal_url", length = 500)
+    /** Guarda tanto uma URL quanto uma imagem em data URI (base64) selecionada pelo usuário. */
+    @Lob
+    @Column(name = "foto_principal_url")
     private String fotoPrincipalUrl;
 
     /** Opcional — só se aplica a produtos perecíveis/com validade (a maioria dos calçados não usa). */

@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
-import { FuncionarioRanking, ProdutoVencendo, RelatorioVendas } from './relatorio.model';
+import { ClienteRanking, FuncionarioRanking, ProdutoParado, ProdutoVencendo, RelatorioVendas } from './relatorio.model';
 
 @Injectable({ providedIn: 'root' })
 export class RelatorioService {
@@ -17,5 +17,13 @@ export class RelatorioService {
 
   produtosVencendo(dias = 30) {
     return this.http.get<ProdutoVencendo[]>(`${environment.apiUrl}/relatorios/produtos-vencendo`, { params: { dias } });
+  }
+
+  clientesRanking(inicio: string, fim: string) {
+    return this.http.get<ClienteRanking[]>(`${environment.apiUrl}/relatorios/clientes`, { params: { inicio, fim } });
+  }
+
+  produtosParados(dias = 60) {
+    return this.http.get<ProdutoParado[]>(`${environment.apiUrl}/relatorios/produtos-parados`, { params: { dias } });
   }
 }

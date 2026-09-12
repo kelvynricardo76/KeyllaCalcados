@@ -139,19 +139,65 @@ export class PdvComponent implements OnInit {
     this.pdvService.removerItem(venda.id, itemId).subscribe(atualizada => this.venda.set(atualizada));
   }
 
-  selecionarCliente(clienteId: string) {
-    const venda = this.venda();
-    if (!venda) return;
-    const id = clienteId ? Number(clienteId) : null;
-    // Cliente é vinculado apenas ao finalizar (necessário para fiado); aqui guardamos localmente.
-    this.clienteSelecionadoId.set(id);
-  }
-
   clienteSelecionadoId = signal<number | null>(null);
 
   nomeClienteSelecionado(): string {
     const id = this.clienteSelecionadoId();
     return this.clientes().find(c => c.id === id)?.nome ?? 'Consumidor final';
+  }
+
+  // ── Cliente da venda (nome + telefone) ────────────────────────────
+  showCliente = signal(false);
+  clienteBusca = signal('');
+  novoClienteNome = '';
+  novoClienteTelefone = '';
+  clienteError = signal('');
+
+  abrirClienteModal() {
+    this.clienteBusca.set('');
+    this.novoClienteNome = '';
+    this.novoClienteTelefone = '';
+    this.clienteError.set('');
+    this.showCliente.set(true);
+  }
+
+  fecharClienteModal() {
+    this.showCliente.set(false);
+  }
+
+  clientesFiltrados(): Cliente[] {
+    const termo = this.clienteBusca().trim().toLowerCase();
+    if (!termo) return this.clientes().slice(0, 20);
+    return this.clientes().filter(c =>
+      c.nome.toLowerCase().includes(termo) || (c.telefone ?? '').includes(termo)
+    ).slice(0, 20);
+  }
+
+  selecionarClienteExistente(cliente: Cliente) {
+    this.clienteSelecionadoId.set(cliente.id);
+    this.showCliente.set(false);
+  }
+
+  removerClienteDaVenda() {
+    this.clienteSelecionadoId.set(null);
+  }
+
+  cadastrarClienteRapido() {
+    const nome = this.novoClienteNome.trim();
+    const telefone = this.novoClienteTelefone.trim();
+    if (!nome || !telefone) {
+      this.clienteError.set('Informe nome e telefone do cliente.');
+      return;
+    }
+    this.clienteError.set('');
+    this.clienteService.criar({ nome, telefone }).subscribe({
+      next: cliente => {
+        this.clientes.update(lista => [...lista, cliente]);
+        this.clienteSelecionadoId.set(cliente.id);
+        this.showCliente.set(false);
+      },
+      error: err => this.clienteError.set(err.error?.message ?? 'Não foi possível cadastrar o cliente.')
+    });
   }
 
   // ── Pagamento / finalização ──────────────────────────────────────

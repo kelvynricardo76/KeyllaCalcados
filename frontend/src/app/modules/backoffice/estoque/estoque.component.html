@@ -18,7 +18,11 @@
       Todas as marcas
     </button>
     @for (m of marcas(); track m.id) {
-      <button class="marca-chip" [class.active]="marcaSelecionada() === m.id" (click)="marcaSelecionada.set(m.id)">
+      <button class="marca-chip" [class.active]="marcaSelecionada() === m.id"
+              [style.border-left-color]="corMarca(m.nome)"
+              [style.background]="marcaSelecionada() === m.id ? corMarca(m.nome) : null"
+              [style.color]="marcaSelecionada() === m.id ? '#fff' : corMarca(m.nome)"
+              (click)="marcaSelecionada.set(m.id)">
         {{ m.nome }} <span class="marca-count">{{ m.quantidadeProdutos }}</span>
       </button>
     }
@@ -57,10 +61,16 @@
     <div class="produtos-grid">
       @for (p of produtosAgrupados(); track p.produtoId) {
         <button class="produto-card" (click)="abrirProduto(p)">
-          <img [src]="imagemDoProduto(p.produtoNome, p.fotoPrincipalUrl)" alt="" class="produto-imagem">
+          <img [src]="imagemDoProduto(p.produtoNome, p.fotoPrincipalUrl, p.categoriaNome)" alt="" class="produto-imagem">
           <div class="produto-info">
             <span class="produto-nome">{{ p.produtoNome }}</span>
-            <span class="produto-marca text-muted">{{ p.marcaNome ?? '—' }} · {{ p.categoriaNome ?? '—' }}</span>
+            <span class="produto-marca" [style.color]="corMarca(p.marcaNome ?? '—')">{{ p.marcaNome ?? '—' }}</span>
+            <span class="text-muted produto-categoria">{{ p.categoriaNome ?? '—' }}</span>
+            @if (p.produtoDataValidade && diasParaVencer(p.produtoDataValidade)! <= 30) {
+              <span class="badge" [class.badge-danger]="diasParaVencer(p.produtoDataValidade)! < 0" [class.badge-warning]="diasParaVencer(p.produtoDataValidade)! >= 0">
+                {{ diasParaVencer(p.produtoDataValidade)! < 0 ? 'Vencido' : 'Vence em ' + diasParaVencer(p.produtoDataValidade) + 'd' }}
+              </span>
+            }
             <div class="produto-footer">
               <span class="produto-qtd" [class.qty-zero]="p.statusPior === 'ZERADO'" [class.qty-low]="p.statusPior === 'BAIXO'">
                 {{ p.quantidadeTotal }} un.
@@ -73,70 +83,97 @@
     </div>
   }
 
-  <!-- ── Modal: detalhe do produto (grade completa) ──────────────── -->
+  <!-- ── Painel: detalhe do produto (grade completa, near-fullscreen) ── -->
   @if (produtoSelecionado(); as p) {
-    <app-modal [titulo]="p.produtoNome" [maxWidth]="800" (fechar)="fecharProduto()">
-      <div class="detalhe-header">
-        <img [src]="imagemDoProduto(p.produtoNome, p.fotoPrincipalUrl)" alt="" class="detalhe-imagem">
-        <div>
-          <p class="text-muted">{{ p.marcaNome ?? '—' }} · {{ p.categoriaNome ?? '—' }}</p>
-          <p><strong>{{ p.quantidadeTotal }}</strong> unidades em estoque (com os filtros atuais)</p>
+    <div class="detalhe-overlay" (click)="fecharProduto()">
+      <div class="detalhe-panel" (click)="$event.stopPropagation()">
+        <div class="detalhe-header">
+          <img [src]="imagemDoProduto(p.produtoNome, p.fotoPrincipalUrl, p.categoriaNome)" alt="" class="detalhe-imagem">
+          <div>
+            <h3>{{ p.produtoNome }}</h3>
+            <p class="text-muted">{{ p.marcaNome ?? '—' }} · {{ p.categoriaNome ?? '—' }}</p>
+            <p><strong>{{ p.quantidadeTotal }}</strong> unidades em estoque no total
+              @if (p.produtoDataValidade) {
+                · Validade: {{ p.produtoDataValidade | date:'dd/MM/yyyy' }}
+                @if (diasParaVencer(p.produtoDataValidade)! < 0) {
+                  <span class="badge badge-danger">Vencido</span>
+                } @else if (diasParaVencer(p.produtoDataValidade)! <= 30) {
+                  <span class="badge badge-warning">Vence em {{ diasParaVencer(p.produtoDataValidade) }}d</span>
+                }
+              }
+            </p>
+          </div>
+          <button type="button" class="btn btn-icon btn-outline" (click)="fecharProduto()" aria-label="Fechar">✕</button>
         </div>
-      </div>
 
-      @if (totaisPorTamanho().length > 0) {
-        <div class="totais-tamanho">
-          @for (t of totaisPorTamanho(); track t.tamanho) {
-            <div class="total-tamanho-item">
-              <span class="tamanho-label">{{ t.tamanho }}</span>
-              <span class="tamanho-total">{{ t.total }}</span>
+        <div class="detalhe-body">
+          <h4>Numeração (clique para filtrar)</h4>
+          <div class="totais-tamanho">
+            @for (t of totaisPorTamanho(); track t.tamanho) {
+              <button class="total-tamanho-item" [class.active]="tamanhoDrill() === t.tamanho" (click)="selecionarTamanhoDrill(t.tamanho)">
+                <span class="tamanho-label">{{ t.tamanho }}</span>
+                <span class="tamanho-total">{{ t.total }}</span>
+              </button>
+            }
+          </div>
+
+          @if (tamanhoDrill()) {
+            <h4>Cor</h4>
+            <div class="cores-row">
+              <button class="cor-chip" [class.active]="corDrill() === null" (click)="corDrill.set(null)">Todas</button>
+              @for (c of coresDoTamanhoSelecionado(); track c.id) {
+                <button class="cor-chip" [class.active]="corDrill() === c.id" (click)="corDrill.set(c.id)">
+                  @if (c.hex) { <span class="cor-swatch" [style.background]="c.hex"></span> }
+                  {{ c.nome }}
+                </button>
+              }
             </div>
           }
-        </div>
-      }
 
-      <div class="table-container">
-        <table class="data-table">
-          <thead>
-            <tr><th>Tamanho</th><th>Cor</th><th>SKU</th><th>Código de Barras</th><th>Loja</th><th>Qtd.</th><th>Status</th><th></th></tr>
-          </thead>
-          <tbody>
-            @for (item of variacoesDoProdutoSelecionado(); track item.id) {
-              <tr>
-                <td>{{ item.tamanhoValor ?? '—' }}</td>
-                <td>
-                  @if (item.corHex) {
-                    <span class="cor-swatch" [style.background]="item.corHex"></span>
-                  }
-                  {{ item.corNome ?? '—' }}
-                </td>
-                <td>{{ item.sku ?? '—' }}</td>
-                <td>{{ item.codigoBarras ?? '—' }}</td>
-                <td>{{ item.lojaNome }}</td>
-                <td class="grade-cell"
-                    [class.qty-zero]="item.statusEstoque === 'ZERADO'"
-                    [class.qty-low]="item.statusEstoque === 'BAIXO'"
-                    [class.qty-ok]="item.statusEstoque === 'OK'">
-                  {{ item.quantidade }}
-                </td>
-                <td>
-                  <span class="badge"
-                        [class.badge-danger]="item.statusEstoque === 'ZERADO'"
-                        [class.badge-warning]="item.statusEstoque === 'BAIXO'"
-                        [class.badge-success]="item.statusEstoque === 'OK'">
-                    {{ item.statusEstoque === 'ZERADO' ? 'Zerado' : item.statusEstoque === 'BAIXO' ? 'Baixo' : 'OK' }}
-                  </span>
-                </td>
-                <td class="d-flex gap-1">
-                  <button class="btn btn-outline btn-sm" (click)="ajustarLinha(item)">Ajustar</button>
-                  <button class="btn btn-secondary btn-sm" (click)="verHistorico(item)">Histórico</button>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
+          <div class="table-container mt-2">
+            <table class="data-table">
+              <thead>
+                <tr><th>Tamanho</th><th>Cor</th><th>SKU</th><th>Código de Barras</th><th>Loja</th><th>Qtd.</th><th>Status</th><th></th></tr>
+              </thead>
+              <tbody>
+                @for (item of variacoesDoProdutoSelecionado(); track item.id) {
+                  <tr>
+                    <td>{{ item.tamanhoValor ?? '—' }}</td>
+                    <td>
+                      @if (item.corHex) {
+                        <span class="cor-swatch" [style.background]="item.corHex"></span>
+                      }
+                      {{ item.corNome ?? '—' }}
+                    </td>
+                    <td>{{ item.sku ?? '—' }}</td>
+                    <td>{{ item.codigoBarras ?? '—' }}</td>
+                    <td>{{ item.lojaNome }}</td>
+                    <td class="grade-cell"
+                        [class.qty-zero]="item.statusEstoque === 'ZERADO'"
+                        [class.qty-low]="item.statusEstoque === 'BAIXO'"
+                        [class.qty-ok]="item.statusEstoque === 'OK'">
+                      {{ item.quantidade }}
+                    </td>
+                    <td>
+                      <span class="badge"
+                            [class.badge-danger]="item.statusEstoque === 'ZERADO'"
+                            [class.badge-warning]="item.statusEstoque === 'BAIXO'"
+                            [class.badge-success]="item.statusEstoque === 'OK'">
+                        {{ item.statusEstoque === 'ZERADO' ? 'Zerado' : item.statusEstoque === 'BAIXO' ? 'Baixo' : 'OK' }}
+                      </span>
+                    </td>
+                    <td class="d-flex gap-1">
+                      <button class="btn btn-outline btn-sm" (click)="ajustarLinha(item)">Ajustar</button>
+                      <button class="btn btn-secondary btn-sm" (click)="verHistorico(item)">Histórico</button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
-    </app-modal>
+    </div>
   }
 
   <!-- ── Modal: lançar/ajustar movimento ─────────────────────────── -->

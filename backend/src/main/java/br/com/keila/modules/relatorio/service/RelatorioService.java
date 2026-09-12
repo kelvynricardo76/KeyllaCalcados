@@ -1,14 +1,18 @@
 package br.com.keila.modules.relatorio.service;
 
+import br.com.keila.modules.cliente.model.Cliente;
+import br.com.keila.modules.estoque.model.Estoque;
 import br.com.keila.modules.estoque.repository.EstoqueRepository;
 import br.com.keila.modules.fiado.model.Fiado;
 import br.com.keila.modules.fiado.model.StatusFiado;
 import br.com.keila.modules.fiado.repository.FiadoRepository;
 import br.com.keila.modules.produto.model.Produto;
 import br.com.keila.modules.produto.repository.ProdutoRepository;
+import br.com.keila.modules.relatorio.dto.ClienteRankingResponse;
 import br.com.keila.modules.relatorio.dto.DashboardResponse;
 import br.com.keila.modules.relatorio.dto.FuncionarioRankingResponse;
 import br.com.keila.modules.relatorio.dto.PontoVendaHora;
+import br.com.keila.modules.relatorio.dto.ProdutoParadoResponse;
 import br.com.keila.modules.relatorio.dto.ProdutoRankingResponse;
 import br.com.keila.modules.relatorio.dto.ProdutoVencendoResponse;
 import br.com.keila.modules.relatorio.dto.RelatorioVendasResponse;
@@ -28,6 +32,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.Instant;
 import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -144,6 +149,65 @@ public class RelatorioService {
                             vendasDoUsuario.size(), total, ticket);
                 })
                 .sorted(Comparator.comparing(FuncionarioRankingResponse::valorTotal).reversed())
+                .toList();
+    }
+
+    /** Ranking de clientes por total comprado no período — para identificar quem mais compra e o maior ticket médio. */
+    public List<ClienteRankingResponse> relatorioClientes(LocalDate inicio, LocalDate fim) {
+        Instant inicioTs = inicio.atStartOfDay(ZONE).toInstant();
+        Instant fimTs = fim.atTime(LocalTime.MAX).atZone(ZONE).toInstant();
+        List<Venda> vendas = vendaRepository.findByStatusAndCreatedAtBetween(StatusVenda.FECHADA, inicioTs, fimTs);
+
+        Map<Cliente, List<Venda>> porCliente = vendas.stream()
+                .filter(v -> v.getCliente() != null)
+                .collect(Collectors.groupingBy(Venda::getCliente));
+
+        return porCliente.entrySet().stream()
+                .map(entry -> {
+                    Cliente cliente = entry.getKey();
+                    List<Venda> vendasDoCliente = entry.getValue();
+                    BigDecimal total = somarTotais(vendasDoCliente);
+                    BigDecimal ticket = vendasDoCliente.isEmpty()
+                            ? BigDecimal.ZERO
+                            : total.divide(BigDecimal.valueOf(vendasDoCliente.size()), 2, RoundingMode.HALF_UP);
+                    return new ClienteRankingResponse(
+                            cliente.getId(), cliente.getNome(), cliente.getTelefone(), vendasDoCliente.size(), total, ticket);
+                })
+                .sorted(Comparator.comparing(ClienteRankingResponse::valorTotal).reversed())
+                .toList();
+    }
+
+    /** Produtos ativos, com estoque disponível, sem venda há pelo menos `dias` dias (ou nunca vendidos). */
+    public List<ProdutoParadoResponse> produtosParados(int dias) {
+        LocalDate hoje = LocalDate.now(ZONE);
+
+        Map<Long, Instant> ultimaVendaPorProduto = itemVendaRepository.buscarUltimaVendaPorProduto().stream()
+                .collect(Collectors.toMap(
+                        ItemVendaRepository.UltimaVendaProduto::getProdutoId,
+                        ItemVendaRepository.UltimaVendaProduto::getUltimaVenda));
+
+        Map<Long, Integer> estoquePorProduto = estoqueRepository.findAll().stream()
+                .collect(Collectors.groupingBy(e -> e.getVariacao().getProduto().getId(),
+                        Collectors.summingInt(Estoque::getQuantidade)));
+
+        return produtoRepository.findAllByOrderByNomeAsc().stream()
+                .filter(Produto::isAtivo)
+                .filter(p -> estoquePorProduto.getOrDefault(p.getId(), 0) > 0)
+                .map(p -> {
+                    Instant ultima = ultimaVendaPorProduto.get(p.getId());
+                    Long diasSemVenda = ultima != null
+                            ? ChronoUnit.DAYS.between(ultima.atZone(ZONE).toLocalDate(), hoje)
+                            : null;
+                    return new ProdutoParadoResponse(
+                            p.getId(), p.getNome(), p.getMarca() != null ? p.getMarca().getNome() : null,
+                            ultima, diasSemVenda, estoquePorProduto.getOrDefault(p.getId(), 0));
+                })
+                .filter(r -> r.diasSemVenda() == null || r.diasSemVenda() >= dias)
+                .sorted((a, b) -> {
+                    long diasA = a.diasSemVenda() == null ? Long.MAX_VALUE : a.diasSemVenda();
+                    long diasB = b.diasSemVenda() == null ? Long.MAX_VALUE : b.diasSemVenda();
+                    return Long.compare(diasB, diasA);
+                })
                 .toList();
     }
 

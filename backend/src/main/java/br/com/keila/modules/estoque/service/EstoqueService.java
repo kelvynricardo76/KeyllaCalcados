@@ -151,6 +151,7 @@ public class EstoqueService {
                 : "OK";
         return new EstoqueResponse(
                 e.getId(), variacao.getId(), produto.getId(), produto.getNome(), produto.getFotoPrincipalUrl(),
+                produto.getDataValidade(),
                 marca != null ? marca.getId() : null,
                 marca != null ? marca.getNome() : null,
                 categoria != null ? categoria.getId() : null,

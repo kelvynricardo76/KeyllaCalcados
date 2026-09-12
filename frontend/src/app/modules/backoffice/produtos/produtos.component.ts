@@ -200,12 +200,51 @@ export class ProdutosComponent implements OnInit {
   get temGrade() { return this.form.controls.temGrade.value; }
 
   imagemDoProduto(produto: Produto): string {
-    return produto.fotoPrincipalUrl || imagemFake(produto.nome);
+    return produto.fotoPrincipalUrl || imagemFake(produto.nome, produto.categoriaNome);
   }
 
   get previewImagem(): string {
     const url = this.form.controls.fotoPrincipalUrl.value;
     const nome = this.form.controls.nome.value;
-    return url || imagemFake(nome || '?');
+    const categoriaId = this.form.controls.categoriaId.value;
+    const categoriaNome = this.categorias().find(c => c.id === categoriaId)?.nome;
+    return url || imagemFake(nome || '?', categoriaNome);
+  }
+
+  /** Lê o arquivo escolhido (qualquer formato de imagem suportado pelo navegador), redimensiona
+   *  e converte em data URI para guardar junto do produto, sem depender de upload/storage externo. */
+  onArquivoSelecionado(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const arquivo = input.files?.[0];
+    if (!arquivo) return;
+
+    const leitor = new FileReader();
+    leitor.onload = () => {
+      const imagem = new Image();
+      imagem.onload = () => {
+        const maxDim = 480;
+        let { width, height } = imagem;
+        if (width > height && width > maxDim) {
+          height = Math.round(height * (maxDim / width));
+          width = maxDim;
+        } else if (height > maxDim) {
+          width = Math.round(width * (maxDim / height));
+          height = maxDim;
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(imagem, 0, 0, width, height);
+        this.form.controls.fotoPrincipalUrl.setValue(canvas.toDataURL('image/jpeg', 0.85));
+      };
+      imagem.src = leitor.result as string;
+    };
+    leitor.readAsDataURL(arquivo);
+    input.value = '';
+  }
+
+  removerFoto() {
+    this.form.controls.fotoPrincipalUrl.setValue('');
   }
 }

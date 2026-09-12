@@ -3,6 +3,7 @@ package br.com.keila.modules.auth.security;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -35,6 +36,20 @@ public class SecurityConfig {
             "/h2-console/**"
     };
 
+    /** Catálogo/estoque — perfil VENDEDOR pode consultar (GET) livremente. */
+    private static final String[] VENDEDOR_CONSULTA_PATHS = {
+            "/api/v1/produtos/**", "/api/v1/estoque/**", "/api/v1/marcas/**",
+            "/api/v1/categorias/**", "/api/v1/cores/**", "/api/v1/tamanhos/**", "/api/v1/lojas/**"
+    };
+
+    /** Módulos totalmente fora do alcance do perfil VENDEDOR (vendas, caixa, financeiro, clientes...). */
+    private static final String[] VENDEDOR_RESTRITO_PATHS = {
+            "/api/v1/produtos/**", "/api/v1/estoque/**", "/api/v1/marcas/**", "/api/v1/categorias/**",
+            "/api/v1/cores/**", "/api/v1/tamanhos/**", "/api/v1/lojas/**", "/api/v1/vendas/**",
+            "/api/v1/caixas/**", "/api/v1/sessoes/**", "/api/v1/clientes/**", "/api/v1/fiados/**",
+            "/api/v1/fornecedores/**", "/api/v1/compras/**", "/api/v1/relatorios/**"
+    };
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
@@ -44,6 +59,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC_PATHS).permitAll()
                         .requestMatchers("/api/v1/usuarios/**").hasRole("ADMIN")
+                        // Vendedor só pode consultar (GET) catálogo e estoque — nada de vendas, caixa, clientes, financeiro etc.
+                        .requestMatchers(HttpMethod.GET, VENDEDOR_CONSULTA_PATHS).authenticated()
+                        .requestMatchers(VENDEDOR_RESTRITO_PATHS)
+                                .hasAnyRole("ADMIN", "GERENTE", "CAIXA", "ESTOQUISTA")
                         .anyRequest().authenticated())
                 // Console do H2 roda dentro de um <frame>; sem isso o navegador bloqueia por X-Frame-Options.
                 .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))

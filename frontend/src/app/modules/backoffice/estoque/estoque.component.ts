@@ -6,7 +6,7 @@ import { EstoqueItem, Loja, Movimentacao, TipoMovEstoque } from './estoque.model
 import { ProdutoService } from '../produtos/produto.service';
 import { Variacao } from '../produtos/produto.model';
 import { ModalComponent } from '../../../shared/components/modal/modal.component';
-import { imagemFake } from '../../../shared/utils/fake-image';
+import { corPorTexto, imagemFake } from '../../../shared/utils/fake-image';
 
 interface MarcaResumo {
   id: number | null;
@@ -20,6 +20,7 @@ interface ProdutoResumo {
   marcaNome?: string | null;
   categoriaNome?: string | null;
   fotoPrincipalUrl?: string | null;
+  produtoDataValidade?: string | null;
   quantidadeTotal: number;
   variacoesCount: number;
   statusPior: 'ZERADO' | 'BAIXO' | 'OK';
@@ -59,6 +60,8 @@ export class EstoqueComponent implements OnInit {
   filtroCodigoBarras = signal('');
 
   produtoSelecionado = signal<ProdutoResumo | null>(null);
+  tamanhoDrill = signal<string | null>(null);
+  corDrill = signal<number | null>(null);
 
   showAjuste = signal(false);
   showHistorico = signal(false);
@@ -165,6 +168,7 @@ export class EstoqueComponent implements OnInit {
         resumo = {
           produtoId: item.produtoId, produtoNome: item.produtoNome, marcaNome: item.marcaNome,
           categoriaNome: item.categoriaNome, fotoPrincipalUrl: item.fotoPrincipalUrl,
+          produtoDataValidade: item.produtoDataValidade,
           quantidadeTotal: 0, variacoesCount: 0, statusPior: 'OK'
         };
         mapa.set(item.produtoId, resumo);
@@ -177,17 +181,45 @@ export class EstoqueComponent implements OnInit {
     return Array.from(mapa.values()).sort((a, b) => a.produtoNome.localeCompare(b.produtoNome));
   }
 
-  variacoesDoProdutoSelecionado(): EstoqueItem[] {
+  /** Toda a grade do produto selecionado, sem os filtros da barra principal — a navegação dentro do
+   *  painel de detalhe (numeração/cor) é independente dos filtros usados para achar o produto. */
+  private variacoesDoProdutoBase(): EstoqueItem[] {
     const produto = this.produtoSelecionado();
     if (!produto) return [];
-    return this.itensFiltrados()
-      .filter(i => i.produtoId === produto.produtoId)
+    return this.itens().filter(i => i.produtoId === produto.produtoId);
+  }
+
+  tamanhosDoProdutoSelecionado(): string[] {
+    const set = new Set<string>();
+    this.variacoesDoProdutoBase().forEach(i => { if (i.tamanhoValor) set.add(i.tamanhoValor); });
+    return Array.from(set).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+  }
+
+  coresDoTamanhoSelecionado(): { id: number; nome: string; hex?: string | null }[] {
+    const tamanho = this.tamanhoDrill();
+    const mapa = new Map<number, { id: number; nome: string; hex?: string | null }>();
+    this.variacoesDoProdutoBase()
+      .filter(i => !tamanho || i.tamanhoValor === tamanho)
+      .forEach(i => { if (i.corId) mapa.set(i.corId, { id: i.corId, nome: i.corNome ?? '', hex: i.corHex }); });
+    return Array.from(mapa.values()).sort((a, b) => a.nome.localeCompare(b.nome));
+  }
+
+  selecionarTamanhoDrill(tamanho: string) {
+    this.tamanhoDrill.set(this.tamanhoDrill() === tamanho ? null : tamanho);
+    this.corDrill.set(null);
+  }
+
+  variacoesDoProdutoSelecionado(): EstoqueItem[] {
+    const tamanho = this.tamanhoDrill();
+    const cor = this.corDrill();
+    return this.variacoesDoProdutoBase()
+      .filter(i => (!tamanho || i.tamanhoValor === tamanho) && (cor === null || i.corId === cor))
       .sort((a, b) => (a.tamanhoValor ?? '').localeCompare(b.tamanhoValor ?? '', undefined, { numeric: true }));
   }
 
   totaisPorTamanho(): TotalPorTamanho[] {
     const mapa = new Map<string, number>();
-    for (const item of this.variacoesDoProdutoSelecionado()) {
+    for (const item of this.variacoesDoProdutoBase()) {
       const chave = item.tamanhoValor ?? '—';
       mapa.set(chave, (mapa.get(chave) ?? 0) + item.quantidade);
     }
@@ -204,13 +236,27 @@ export class EstoqueComponent implements OnInit {
     this.filtroCodigoBarras.set('');
   }
 
-  imagemDoProduto(nome: string, foto?: string | null): string {
-    return foto || imagemFake(nome);
+  imagemDoProduto(nome: string, foto?: string | null, categoria?: string | null): string {
+    return foto || imagemFake(nome, categoria);
+  }
+
+  corMarca(nome: string): string {
+    return corPorTexto(nome);
+  }
+
+  diasParaVencer(dataValidade?: string | null): number | null {
+    if (!dataValidade) return null;
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    const validade = new Date(dataValidade + 'T00:00:00');
+    return Math.round((validade.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
   }
 
   // ── Detalhe do produto ───────────────────────────────────────────
   abrirProduto(produto: ProdutoResumo) {
     this.produtoSelecionado.set(produto);
+    this.tamanhoDrill.set(null);
+    this.corDrill.set(null);
   }
 
   fecharProduto() {

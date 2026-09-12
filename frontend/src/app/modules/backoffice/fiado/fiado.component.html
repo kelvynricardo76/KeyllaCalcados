@@ -74,9 +74,36 @@
       @if (error()) {
         <div class="form-error mb-2">⚠ {{ error() }}</div>
       }
+      @if (showNovoCliente()) {
+        <div class="novo-cliente-box">
+          @if (novoClienteError()) {
+            <div class="form-error mb-2">⚠ {{ novoClienteError() }}</div>
+          }
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Nome *</label>
+              <input type="text" class="form-control" id="input-novo-cliente-fiado-nome" [(ngModel)]="novoClienteNome" [ngModelOptions]="{standalone: true}">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Telefone *</label>
+              <input type="text" class="form-control" [(ngModel)]="novoClienteTelefone" [ngModelOptions]="{standalone: true}" placeholder="(11) 98765-4321">
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn btn-outline btn-sm" (click)="cancelarNovoCliente()">Cancelar</button>
+            <button type="button" class="btn btn-secondary btn-sm" (click)="cadastrarClienteRapido()">Cadastrar cliente</button>
+          </div>
+        </div>
+      }
+
       <form [formGroup]="form">
         <div class="form-group">
-          <label class="form-label">Cliente *</label>
+          <label class="form-label cliente-label">
+            Cliente *
+            @if (!showNovoCliente()) {
+              <button type="button" class="btn-link" (click)="abrirNovoCliente()">+ Novo cliente</button>
+            }
+          </label>
           <select class="form-control" formControlName="clienteId">
             <option [ngValue]="null">Selecione...</option>
             @for (c of clientes(); track c.id) {

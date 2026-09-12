@@ -18,8 +18,8 @@ export class LoginComponent {
   private router = inject(Router);
 
   form = this.fb.nonNullable.group({
-    email: ['', [Validators.required, Validators.email]],
-    senha: ['', [Validators.required, Validators.minLength(6)]]
+    email: ['', [Validators.required]],
+    senha: ['', [Validators.required]]
   });
 
   // Signals para estado da UI

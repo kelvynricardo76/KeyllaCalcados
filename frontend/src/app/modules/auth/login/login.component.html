@@ -59,15 +59,15 @@
       <form [formGroup]="form" (ngSubmit)="onSubmit()" class="login-form">
 
         <div class="form-group">
-          <label class="form-label" for="email">E-mail</label>
+          <label class="form-label" for="email">Usuário</label>
           <div class="input-wrapper">
-            <span class="input-icon">✉</span>
-            <input id="email" type="email" formControlName="email"
-                   class="form-control" placeholder="seu@email.com.br"
-                   autocomplete="email">
+            <span class="input-icon">👤</span>
+            <input id="email" type="text" formControlName="email"
+                   class="form-control" placeholder="admin ou seu e-mail"
+                   autocomplete="username">
           </div>
           @if (emailCtrl.invalid && emailCtrl.touched) {
-            <span class="form-error">⚠ E-mail inválido</span>
+            <span class="form-error">⚠ Informe seu usuário ou e-mail</span>
           }
         </div>
 
@@ -84,7 +84,7 @@
             </button>
           </div>
           @if (senhaCtrl.invalid && senhaCtrl.touched) {
-            <span class="form-error">⚠ Mínimo 6 caracteres</span>
+            <span class="form-error">⚠ Informe a senha</span>
           }
         </div>
 

@@ -89,8 +89,8 @@ public class DataSeeder implements ApplicationRunner {
 
         usuarioRepository.save(Usuario.builder()
                 .nome("Administrador")
-                .email("admin@keila.com.br")
-                .senhaHash(passwordEncoder.encode("Admin@123"))
+                .email("admin")
+                .senhaHash(passwordEncoder.encode("admin"))
                 .perfil(PerfilUsuario.ADMIN)
                 .ativo(true)
                 .build());
@@ -107,7 +107,7 @@ public class DataSeeder implements ApplicationRunner {
         seedCliente();
         seedFornecedor();
 
-        log.info("Dados iniciais carregados. Login: admin@keila.com.br / Admin@123");
+        log.info("Dados iniciais carregados. Login: admin / admin");
     }
 
     private void seedCategorias() {

@@ -97,8 +97,8 @@ Acesse **http://localhost:4200**.
 ### Login de acesso
 
 ```
-E-mail: admin@keila.com.br
-Senha:  Admin@123
+Usuário: admin
+Senha:   admin
 ```
 
 > A tela de login também tem um botão "Entrar em modo demonstração (sem

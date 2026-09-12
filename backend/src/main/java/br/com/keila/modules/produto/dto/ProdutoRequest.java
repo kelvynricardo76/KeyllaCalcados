@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 public record ProdutoRequest(
         @NotBlank @Size(max = 200) String nome,
@@ -16,6 +17,8 @@ public record ProdutoRequest(
         String sku,
         @NotNull @DecimalMin(value = "0", inclusive = true) BigDecimal precoCusto,
         @NotNull @DecimalMin(value = "0", inclusive = true) BigDecimal precoVenda,
-        boolean temGrade
+        boolean temGrade,
+        String fotoPrincipalUrl,
+        LocalDate dataValidade
 ) {
 }

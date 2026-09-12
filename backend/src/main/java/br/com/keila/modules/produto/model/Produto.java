@@ -12,6 +12,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
 
 /** Entidade JPA para a tabela `produtos` (V2__create_produtos.sql). */
 @Entity
@@ -59,6 +60,10 @@ public class Produto {
 
     @Column(name = "foto_principal_url", length = 500)
     private String fotoPrincipalUrl;
+
+    /** Opcional — só se aplica a produtos perecíveis/com validade (a maioria dos calçados não usa). */
+    @Column(name = "data_validade")
+    private LocalDate dataValidade;
 
     @Column(nullable = false)
     private boolean ativo;

@@ -11,10 +11,19 @@ export interface Loja {
 export interface EstoqueItem {
   id: number;
   variacaoId: number;
+  produtoId: number;
   produtoNome: string;
+  fotoPrincipalUrl?: string | null;
+  marcaId?: number | null;
+  marcaNome?: string | null;
+  categoriaId?: number | null;
+  categoriaNome?: string | null;
   tamanhoValor?: string | null;
+  corId?: number | null;
   corNome?: string | null;
+  corHex?: string | null;
   sku?: string | null;
+  codigoBarras?: string | null;
   lojaId: number;
   lojaNome: string;
   quantidade: number;

@@ -4,11 +4,16 @@ import br.com.keila.modules.estoque.repository.EstoqueRepository;
 import br.com.keila.modules.fiado.model.Fiado;
 import br.com.keila.modules.fiado.model.StatusFiado;
 import br.com.keila.modules.fiado.repository.FiadoRepository;
+import br.com.keila.modules.produto.model.Produto;
+import br.com.keila.modules.produto.repository.ProdutoRepository;
 import br.com.keila.modules.relatorio.dto.DashboardResponse;
+import br.com.keila.modules.relatorio.dto.FuncionarioRankingResponse;
 import br.com.keila.modules.relatorio.dto.PontoVendaHora;
 import br.com.keila.modules.relatorio.dto.ProdutoRankingResponse;
+import br.com.keila.modules.relatorio.dto.ProdutoVencendoResponse;
 import br.com.keila.modules.relatorio.dto.RelatorioVendasResponse;
 import br.com.keila.modules.relatorio.dto.VendaResumoResponse;
+import br.com.keila.modules.usuario.model.Usuario;
 import br.com.keila.modules.venda.model.StatusVenda;
 import br.com.keila.modules.venda.model.Venda;
 import br.com.keila.modules.venda.repository.ItemVendaRepository;
@@ -24,8 +29,10 @@ import java.time.LocalTime;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -39,6 +46,7 @@ public class RelatorioService {
     private final FiadoRepository fiadoRepository;
     private final EstoqueRepository estoqueRepository;
     private final ItemVendaRepository itemVendaRepository;
+    private final ProdutoRepository produtoRepository;
 
     public DashboardResponse dashboard() {
         LocalDate hoje = LocalDate.now(ZONE);
@@ -89,12 +97,70 @@ public class RelatorioService {
                         v.getUsuario().getNome(), v.getValorTotal()))
                 .toList();
 
-        List<ProdutoRankingResponse> topProdutos = itemVendaRepository.ranquearProdutos(inicioTs, fimTs).stream()
-                .map(r -> new ProdutoRankingResponse(r.getNome(), r.getQuantidade(), r.getTotal()))
+        List<ItemVendaRepository.RankingProduto> ranking = itemVendaRepository.ranquearProdutos(inicioTs, fimTs);
+
+        List<ProdutoRankingResponse> maisVendidos = ranking.stream()
+                .map(r -> new ProdutoRankingResponse(r.getProdutoId(), r.getNome(), r.getQuantidade(), r.getTotal()))
                 .limit(10)
                 .toList();
 
-        return new RelatorioVendasResponse(inicio, fim, faturamentoTotal, vendas.size(), ticketMedio, resumoVendas, topProdutos);
+        List<ProdutoRankingResponse> menosVendidos = ranking.stream()
+                .sorted(Comparator.comparingLong(ItemVendaRepository.RankingProduto::getQuantidade))
+                .map(r -> new ProdutoRankingResponse(r.getProdutoId(), r.getNome(), r.getQuantidade(), r.getTotal()))
+                .limit(10)
+                .toList();
+
+        Set<Long> produtosComVenda = ranking.stream()
+                .map(ItemVendaRepository.RankingProduto::getProdutoId)
+                .collect(Collectors.toSet());
+        List<String> produtosSemVenda = produtoRepository.findAllByOrderByNomeAsc().stream()
+                .filter(Produto::isAtivo)
+                .filter(p -> !produtosComVenda.contains(p.getId()))
+                .map(Produto::getNome)
+                .toList();
+
+        return new RelatorioVendasResponse(inicio, fim, faturamentoTotal, vendas.size(), ticketMedio,
+                resumoVendas, maisVendidos, menosVendidos, produtosSemVenda);
+    }
+
+    /** Ranking de vendas por funcionário (vendedor) no período — para controle de desempenho. */
+    public List<FuncionarioRankingResponse> relatorioFuncionarios(LocalDate inicio, LocalDate fim) {
+        Instant inicioTs = inicio.atStartOfDay(ZONE).toInstant();
+        Instant fimTs = fim.atTime(LocalTime.MAX).atZone(ZONE).toInstant();
+        List<Venda> vendas = vendaRepository.findByStatusAndCreatedAtBetween(StatusVenda.FECHADA, inicioTs, fimTs);
+
+        Map<Usuario, List<Venda>> porUsuario = vendas.stream().collect(Collectors.groupingBy(Venda::getUsuario));
+
+        return porUsuario.entrySet().stream()
+                .map(entry -> {
+                    Usuario usuario = entry.getKey();
+                    List<Venda> vendasDoUsuario = entry.getValue();
+                    BigDecimal total = somarTotais(vendasDoUsuario);
+                    BigDecimal ticket = vendasDoUsuario.isEmpty()
+                            ? BigDecimal.ZERO
+                            : total.divide(BigDecimal.valueOf(vendasDoUsuario.size()), 2, RoundingMode.HALF_UP);
+                    return new FuncionarioRankingResponse(
+                            usuario.getId(), usuario.getNome(), usuario.getPerfil().name(),
+                            vendasDoUsuario.size(), total, ticket);
+                })
+                .sorted(Comparator.comparing(FuncionarioRankingResponse::valorTotal).reversed())
+                .toList();
+    }
+
+    /** Produtos com data de validade vencendo nos próximos `dias` (ou já vencidos). */
+    public List<ProdutoVencendoResponse> produtosVencendo(int dias) {
+        LocalDate hoje = LocalDate.now(ZONE);
+        LocalDate limite = hoje.plusDays(dias);
+
+        return produtoRepository.findAllByOrderByNomeAsc().stream()
+                .filter(Produto::isAtivo)
+                .filter(p -> p.getDataValidade() != null && !p.getDataValidade().isAfter(limite))
+                .sorted(Comparator.comparing(Produto::getDataValidade))
+                .map(p -> new ProdutoVencendoResponse(
+                        p.getId(), p.getNome(), p.getMarca() != null ? p.getMarca().getNome() : null,
+                        p.getDataValidade(), java.time.temporal.ChronoUnit.DAYS.between(hoje, p.getDataValidade()),
+                        p.getDataValidade().isBefore(hoje)))
+                .toList();
     }
 
     private List<Venda> buscarVendasFechadasDoDia(LocalDate dia) {

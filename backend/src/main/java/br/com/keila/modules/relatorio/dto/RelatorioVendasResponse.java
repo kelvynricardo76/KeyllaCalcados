@@ -11,6 +11,8 @@ public record RelatorioVendasResponse(
         long quantidadeVendas,
         BigDecimal ticketMedio,
         List<VendaResumoResponse> vendas,
-        List<ProdutoRankingResponse> topProdutos
+        List<ProdutoRankingResponse> maisVendidos,
+        List<ProdutoRankingResponse> menosVendidos,
+        List<String> produtosSemVenda
 ) {
 }

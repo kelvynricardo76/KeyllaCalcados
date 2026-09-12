@@ -1,6 +1,8 @@
 package br.com.keila.modules.relatorio.controller;
 
 import br.com.keila.modules.relatorio.dto.DashboardResponse;
+import br.com.keila.modules.relatorio.dto.FuncionarioRankingResponse;
+import br.com.keila.modules.relatorio.dto.ProdutoVencendoResponse;
 import br.com.keila.modules.relatorio.dto.RelatorioVendasResponse;
 import br.com.keila.modules.relatorio.service.RelatorioService;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/relatorios")
@@ -29,5 +32,17 @@ public class RelatorioController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fim) {
         return relatorioService.relatorioVendas(inicio, fim);
+    }
+
+    @GetMapping("/funcionarios")
+    public List<FuncionarioRankingResponse> relatorioFuncionarios(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fim) {
+        return relatorioService.relatorioFuncionarios(inicio, fim);
+    }
+
+    @GetMapping("/produtos-vencendo")
+    public List<ProdutoVencendoResponse> produtosVencendo(@RequestParam(defaultValue = "30") int dias) {
+        return relatorioService.produtosVencendo(dias);
     }
 }

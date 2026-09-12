@@ -20,6 +20,7 @@
     <table class="data-table">
       <thead>
         <tr>
+          <th></th>
           <th>Nome</th>
           <th>Marca</th>
           <th>Categoria</th>
@@ -34,12 +35,13 @@
       </thead>
       <tbody>
         @if (loading()) {
-          <tr><td colspan="10" class="text-center text-muted">Carregando...</td></tr>
+          <tr><td colspan="11" class="text-center text-muted">Carregando...</td></tr>
         } @else if (produtos().length === 0) {
-          <tr><td colspan="10" class="text-center text-muted">Nenhum produto encontrado.</td></tr>
+          <tr><td colspan="11" class="text-center text-muted">Nenhum produto encontrado.</td></tr>
         } @else {
           @for (produto of produtos(); track produto.id) {
             <tr [id]="'produto-row-' + produto.id">
+              <td><img [src]="imagemDoProduto(produto)" alt="" class="produto-thumb"></td>
               <td>{{ produto.nome }}</td>
               <td>{{ produto.marcaNome ?? '—' }}</td>
               <td>{{ produto.categoriaNome ?? '—' }}</td>
@@ -128,6 +130,19 @@
           <div class="form-group">
             <label class="form-label">Preço de Venda *</label>
             <input type="number" step="0.01" min="0" class="form-control" formControlName="precoVenda">
+          </div>
+        </div>
+
+        <div class="form-row foto-row">
+          <div class="form-group foto-preview-group">
+            <label class="form-label">Foto</label>
+            <img [src]="previewImagem" alt="" class="foto-preview">
+          </div>
+          <div class="form-group foto-input-group">
+            <label class="form-label">URL da Foto (opcional)</label>
+            <input class="form-control" formControlName="fotoPrincipalUrl" placeholder="Deixe em branco para usar uma imagem gerada automaticamente">
+            <label class="form-label mt-2">Data de Validade (se aplicável)</label>
+            <input type="date" class="form-control" formControlName="dataValidade">
           </div>
         </div>
 

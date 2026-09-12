@@ -1,0 +1,47 @@
+.page-header {
+  margin-bottom: 20px;
+  h1 { margin: 0; font-size: 1.6rem; }
+}
+
+.filtro-periodo {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  padding: 16px 20px !important;
+
+  .form-group { margin-bottom: 0; }
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.barra-percentual {
+  position: relative;
+  background: var(--surface-bg);
+  border-radius: var(--border-radius-sm);
+  height: 22px;
+  min-width: 120px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+
+  span {
+    position: relative;
+    z-index: 1;
+    padding-left: 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+}
+
+.barra-fill {
+  position: absolute;
+  inset: 0;
+  width: 0;
+  background: var(--primary-color);
+  opacity: 0.25;
+}

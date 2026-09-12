@@ -1,16 +1,39 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { EstoqueService } from './estoque.service';
 import { EstoqueItem, Loja, Movimentacao, TipoMovEstoque } from './estoque.model';
 import { ProdutoService } from '../produtos/produto.service';
 import { Variacao } from '../produtos/produto.model';
 import { ModalComponent } from '../../../shared/components/modal/modal.component';
+import { imagemFake } from '../../../shared/utils/fake-image';
+
+interface MarcaResumo {
+  id: number | null;
+  nome: string;
+  quantidadeProdutos: number;
+}
+
+interface ProdutoResumo {
+  produtoId: number;
+  produtoNome: string;
+  marcaNome?: string | null;
+  categoriaNome?: string | null;
+  fotoPrincipalUrl?: string | null;
+  quantidadeTotal: number;
+  variacoesCount: number;
+  statusPior: 'ZERADO' | 'BAIXO' | 'OK';
+}
+
+interface TotalPorTamanho {
+  tamanho: string;
+  total: number;
+}
 
 @Component({
   selector: 'app-estoque',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, ModalComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, ModalComponent],
   templateUrl: './estoque.component.html',
   styleUrl: './estoque.component.scss'
 })
@@ -20,13 +43,22 @@ export class EstoqueComponent implements OnInit {
   private fb = inject(FormBuilder);
 
   itens = signal<EstoqueItem[]>([]);
-  variacoes = signal<Variacao[]>([]);
+  variacoesCatalogo = signal<Variacao[]>([]);
   lojas = signal<Loja[]>([]);
   movimentacoes = signal<Movimentacao[]>([]);
 
   loading = signal(true);
   saving = signal(false);
   error = signal('');
+
+  // ── Filtros ──────────────────────────────────────────────────────
+  marcaSelecionada = signal<number | null>(null);
+  busca = signal('');
+  filtroTamanho = signal('');
+  filtroCor = signal<number | null>(null);
+  filtroCodigoBarras = signal('');
+
+  produtoSelecionado = signal<ProdutoResumo | null>(null);
 
   showAjuste = signal(false);
   showHistorico = signal(false);
@@ -54,7 +86,7 @@ export class EstoqueComponent implements OnInit {
 
   private carregarTudo() {
     this.loading.set(true);
-    this.produtoService.listarTodasVariacoes().subscribe(v => this.variacoes.set(v));
+    this.produtoService.listarTodasVariacoes().subscribe(v => this.variacoesCatalogo.set(v));
     this.estoqueService.listarLojas().subscribe(lojas => {
       this.lojas.set(lojas);
       if (lojas.length > 0) this.form.controls.lojaId.setValue(lojas[0].id);
@@ -70,6 +102,122 @@ export class EstoqueComponent implements OnInit {
     });
   }
 
+  // ── Dados derivados (marcas, tamanhos, cores disponíveis) ────────
+  marcas = computed<MarcaResumo[]>(() => {
+    const porMarca = new Map<string, MarcaResumo>();
+    for (const item of this.itens()) {
+      const chave = String(item.marcaId ?? 'sem-marca');
+      const atual = porMarca.get(chave);
+      if (atual) {
+        atual.quantidadeProdutos += 0; // contagem de produtos únicos é ajustada abaixo
+      } else {
+        porMarca.set(chave, { id: item.marcaId ?? null, nome: item.marcaNome ?? 'Sem marca', quantidadeProdutos: 0 });
+      }
+    }
+    // conta produtos únicos por marca
+    const produtosPorMarca = new Map<string, Set<number>>();
+    for (const item of this.itens()) {
+      const chave = String(item.marcaId ?? 'sem-marca');
+      if (!produtosPorMarca.has(chave)) produtosPorMarca.set(chave, new Set());
+      produtosPorMarca.get(chave)!.add(item.produtoId);
+    }
+    for (const [chave, resumo] of porMarca) {
+      resumo.quantidadeProdutos = produtosPorMarca.get(chave)?.size ?? 0;
+    }
+    return Array.from(porMarca.values()).sort((a, b) => a.nome.localeCompare(b.nome));
+  });
+
+  tamanhosDisponiveis = computed<string[]>(() => {
+    const set = new Set<string>();
+    this.itens().forEach(i => { if (i.tamanhoValor) set.add(i.tamanhoValor); });
+    return Array.from(set).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+  });
+
+  coresDisponiveis = computed<{ id: number; nome: string; hex?: string | null }[]>(() => {
+    const mapa = new Map<number, { id: number; nome: string; hex?: string | null }>();
+    this.itens().forEach(i => { if (i.corId) mapa.set(i.corId, { id: i.corId, nome: i.corNome ?? '', hex: i.corHex }); });
+    return Array.from(mapa.values()).sort((a, b) => a.nome.localeCompare(b.nome));
+  });
+
+  // ── Filtragem e agrupamento ──────────────────────────────────────
+  itensFiltrados(): EstoqueItem[] {
+    const marca = this.marcaSelecionada();
+    const termo = this.busca().trim().toLowerCase();
+    const tamanho = this.filtroTamanho();
+    const cor = this.filtroCor();
+    const codBarras = this.filtroCodigoBarras().trim().toLowerCase();
+
+    return this.itens().filter(i => {
+      if (marca !== null && i.marcaId !== marca) return false;
+      if (termo && !i.produtoNome.toLowerCase().includes(termo)) return false;
+      if (tamanho && i.tamanhoValor !== tamanho) return false;
+      if (cor !== null && i.corId !== cor) return false;
+      if (codBarras && !(i.codigoBarras ?? '').toLowerCase().includes(codBarras) && !(i.sku ?? '').toLowerCase().includes(codBarras)) return false;
+      return true;
+    });
+  }
+
+  produtosAgrupados(): ProdutoResumo[] {
+    const mapa = new Map<number, ProdutoResumo>();
+    for (const item of this.itensFiltrados()) {
+      let resumo = mapa.get(item.produtoId);
+      if (!resumo) {
+        resumo = {
+          produtoId: item.produtoId, produtoNome: item.produtoNome, marcaNome: item.marcaNome,
+          categoriaNome: item.categoriaNome, fotoPrincipalUrl: item.fotoPrincipalUrl,
+          quantidadeTotal: 0, variacoesCount: 0, statusPior: 'OK'
+        };
+        mapa.set(item.produtoId, resumo);
+      }
+      resumo.quantidadeTotal += item.quantidade;
+      resumo.variacoesCount += 1;
+      if (item.statusEstoque === 'ZERADO') resumo.statusPior = 'ZERADO';
+      else if (item.statusEstoque === 'BAIXO' && resumo.statusPior !== 'ZERADO') resumo.statusPior = 'BAIXO';
+    }
+    return Array.from(mapa.values()).sort((a, b) => a.produtoNome.localeCompare(b.produtoNome));
+  }
+
+  variacoesDoProdutoSelecionado(): EstoqueItem[] {
+    const produto = this.produtoSelecionado();
+    if (!produto) return [];
+    return this.itensFiltrados()
+      .filter(i => i.produtoId === produto.produtoId)
+      .sort((a, b) => (a.tamanhoValor ?? '').localeCompare(b.tamanhoValor ?? '', undefined, { numeric: true }));
+  }
+
+  totaisPorTamanho(): TotalPorTamanho[] {
+    const mapa = new Map<string, number>();
+    for (const item of this.variacoesDoProdutoSelecionado()) {
+      const chave = item.tamanhoValor ?? '—';
+      mapa.set(chave, (mapa.get(chave) ?? 0) + item.quantidade);
+    }
+    return Array.from(mapa.entries())
+      .map(([tamanho, total]) => ({ tamanho, total }))
+      .sort((a, b) => a.tamanho.localeCompare(b.tamanho, undefined, { numeric: true }));
+  }
+
+  limparFiltros() {
+    this.marcaSelecionada.set(null);
+    this.busca.set('');
+    this.filtroTamanho.set('');
+    this.filtroCor.set(null);
+    this.filtroCodigoBarras.set('');
+  }
+
+  imagemDoProduto(nome: string, foto?: string | null): string {
+    return foto || imagemFake(nome);
+  }
+
+  // ── Detalhe do produto ───────────────────────────────────────────
+  abrirProduto(produto: ProdutoResumo) {
+    this.produtoSelecionado.set(produto);
+  }
+
+  fecharProduto() {
+    this.produtoSelecionado.set(null);
+  }
+
+  // ── Ajuste de estoque ────────────────────────────────────────────
   abrirLancamento() {
     this.error.set('');
     this.form.reset({
@@ -102,13 +250,13 @@ export class EstoqueComponent implements OnInit {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     this.saving.set(true);
     this.error.set('');
-    const valores = this.form.getRawValue();
+    const valor = this.form.getRawValue();
     this.estoqueService.ajustar({
-      variacaoId: valores.variacaoId!,
-      lojaId: valores.lojaId!,
-      tipo: valores.tipo,
-      quantidade: valores.quantidade,
-      motivo: valores.motivo
+      variacaoId: valor.variacaoId!,
+      lojaId: valor.lojaId!,
+      tipo: valor.tipo,
+      quantidade: valor.quantidade,
+      motivo: valor.motivo
     }).subscribe({
       next: () => {
         this.saving.set(false);

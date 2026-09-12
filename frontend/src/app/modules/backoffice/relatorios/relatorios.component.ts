@@ -2,7 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RelatorioService } from './relatorio.service';
-import { RelatorioVendas } from './relatorio.model';
+import { ProdutoVencendo, RelatorioVendas } from './relatorio.model';
 
 function formatarData(d: Date): string {
   return d.toISOString().substring(0, 10);
@@ -22,6 +22,9 @@ export class RelatoriosComponent implements OnInit {
   error = signal('');
   relatorio = signal<RelatorioVendas | null>(null);
 
+  vencendo = signal<ProdutoVencendo[]>([]);
+  diasVencimento = signal(30);
+
   inicio: string;
   fim: string;
 
@@ -34,6 +37,7 @@ export class RelatoriosComponent implements OnInit {
 
   ngOnInit() {
     this.buscar();
+    this.buscarVencendo();
   }
 
   buscar() {
@@ -43,5 +47,9 @@ export class RelatoriosComponent implements OnInit {
       next: r => { this.relatorio.set(r); this.loading.set(false); },
       error: () => { this.error.set('Não foi possível carregar o relatório.'); this.loading.set(false); }
     });
+  }
+
+  buscarVencendo() {
+    this.relatorioService.produtosVencendo(this.diasVencimento()).subscribe(lista => this.vencendo.set(lista));
   }
 }

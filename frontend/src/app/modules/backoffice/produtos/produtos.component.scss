@@ -36,6 +36,29 @@
   input { width: auto; }
 }
 
+.produto-thumb {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--border-radius-sm);
+  object-fit: cover;
+  display: block;
+}
+
+.foto-row {
+  grid-template-columns: 100px 1fr;
+  align-items: start;
+}
+
+.foto-preview-group { align-items: center; }
+
+.foto-preview {
+  width: 90px;
+  height: 90px;
+  border-radius: var(--border-radius-md);
+  object-fit: cover;
+  border: 1px solid var(--border-color);
+}
+
 .grade-section {
   border-top: 1px solid var(--border-color);
   padding-top: 16px;

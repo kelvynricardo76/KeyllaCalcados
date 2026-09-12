@@ -10,7 +10,10 @@ import br.com.keila.modules.estoque.repository.EstoqueRepository;
 import br.com.keila.modules.estoque.repository.MovimentacaoEstoqueRepository;
 import br.com.keila.modules.loja.model.Loja;
 import br.com.keila.modules.loja.repository.LojaRepository;
+import br.com.keila.modules.produto.model.Categoria;
 import br.com.keila.modules.produto.model.Cor;
+import br.com.keila.modules.produto.model.Marca;
+import br.com.keila.modules.produto.model.Produto;
 import br.com.keila.modules.produto.model.Tamanho;
 import br.com.keila.modules.produto.model.VariacaoProduto;
 import br.com.keila.modules.produto.repository.VariacaoProdutoRepository;
@@ -138,16 +141,26 @@ public class EstoqueService {
 
     private EstoqueResponse toResponse(Estoque e) {
         VariacaoProduto variacao = e.getVariacao();
+        Produto produto = variacao.getProduto();
+        Marca marca = produto.getMarca();
+        Categoria categoria = produto.getCategoria();
         Tamanho tamanho = variacao.getTamanho();
         Cor cor = variacao.getCor();
         String status = e.getQuantidade() == 0 ? "ZERADO"
                 : e.getQuantidade() <= e.getEstoqueMinimo() ? "BAIXO"
                 : "OK";
         return new EstoqueResponse(
-                e.getId(), variacao.getId(), variacao.getProduto().getNome(),
+                e.getId(), variacao.getId(), produto.getId(), produto.getNome(), produto.getFotoPrincipalUrl(),
+                marca != null ? marca.getId() : null,
+                marca != null ? marca.getNome() : null,
+                categoria != null ? categoria.getId() : null,
+                categoria != null ? categoria.getNome() : null,
                 tamanho != null ? tamanho.getValor() : null,
+                cor != null ? cor.getId() : null,
                 cor != null ? cor.getNome() : null,
+                cor != null ? cor.getHexCode() : null,
                 variacao.getSku(),
+                variacao.getCodigoBarras() != null ? variacao.getCodigoBarras() : produto.getCodigoBarras(),
                 e.getLoja().getId(), e.getLoja().getNome(),
                 e.getQuantidade(), e.getEstoqueMinimo(), status, e.getUpdatedAt());
     }

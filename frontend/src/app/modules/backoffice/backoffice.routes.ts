@@ -15,6 +15,7 @@ export const BACKOFFICE_ROUTES: Routes = [
       { path: 'caixa',      loadComponent: () => import('./caixa/caixa.component').then(m => m.CaixaComponent) },
       { path: 'fiado',      loadComponent: () => import('./fiado/fiado.component').then(m => m.FiadoComponent) },
       { path: 'relatorios', loadComponent: () => import('./relatorios/relatorios.component').then(m => m.RelatoriosComponent) },
+      { path: 'funcionarios', loadComponent: () => import('./funcionarios/funcionarios.component').then(m => m.FuncionariosComponent) },
       { path: 'usuarios',   loadComponent: () => import('./usuarios/usuarios.component').then(m => m.UsuariosComponent) },
     ]
   }

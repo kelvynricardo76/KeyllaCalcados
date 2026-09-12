@@ -35,6 +35,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -185,6 +186,17 @@ public class DataSeeder implements ApplicationRunner {
 
         criarProdutoSimples(loja, "Meião Esportivo (par)", "Kenner", "Meião", "MEI-ESP",
                 new BigDecimal("5.00"), new BigDecimal("14.90"), 40);
+
+        // Produtos com data de validade cadastrada, para demonstrar o relatório de "produtos vencendo".
+        Produto chinelo = produtoRepository.findAllByOrderByNomeAsc().stream()
+                .filter(p -> p.getNome().equals("Chinelo Slide")).findFirst().orElseThrow();
+        chinelo.setDataValidade(LocalDate.now().plusDays(10));
+        produtoRepository.save(chinelo);
+
+        Produto meiao = produtoRepository.findAllByOrderByNomeAsc().stream()
+                .filter(p -> p.getNome().equals("Meião Esportivo (par)")).findFirst().orElseThrow();
+        meiao.setDataValidade(LocalDate.now().minusDays(5));
+        produtoRepository.save(meiao);
     }
 
     private void criarProdutoComGrade(Loja loja, String nome, String marca, String categoria, String skuBase,
@@ -212,6 +224,7 @@ public class DataSeeder implements ApplicationRunner {
                         .tamanho(tamanhoEntity)
                         .cor(corEntity)
                         .sku(sku)
+                        .codigoBarras(gerarCodigoBarras(sku))
                         .ativo(true)
                         .build());
 
@@ -242,6 +255,7 @@ public class DataSeeder implements ApplicationRunner {
                 .produto(produto)
                 .tamanho(tamanhosPorValor.get("ÚNICO"))
                 .sku(sku + "-UNICO")
+                .codigoBarras(gerarCodigoBarras(sku + "-UNICO"))
                 .ativo(true)
                 .build());
 
@@ -251,6 +265,12 @@ public class DataSeeder implements ApplicationRunner {
                 .quantidade(quantidade)
                 .estoqueMinimo(5)
                 .build());
+    }
+
+    /** Gera um código de barras (EAN-13) determinístico a partir do SKU, apenas para dados de demonstração. */
+    private String gerarCodigoBarras(String sku) {
+        long base = Math.abs((long) sku.hashCode()) % 1_000_000_000_000L;
+        return String.format("789%010d", base);
     }
 
     private void seedCliente() {

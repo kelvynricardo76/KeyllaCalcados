@@ -1,6 +1,7 @@
 package br.com.keila.modules.produto.dto;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 public record ProdutoResponse(
         Long id,
@@ -17,6 +18,7 @@ public record ProdutoResponse(
         BigDecimal margemPercentual,
         boolean temGrade,
         String fotoPrincipalUrl,
+        LocalDate dataValidade,
         boolean ativo
 ) {
 }

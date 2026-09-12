@@ -11,15 +11,17 @@ import java.util.List;
 public interface ItemVendaRepository extends JpaRepository<ItemVenda, Long> {
 
     @Query("""
-            select i.nomeProdutoSnapshot as nome, sum(i.quantidade) as quantidade, sum(i.subtotal) as total
+            select i.produto.id as produtoId, i.nomeProdutoSnapshot as nome,
+                   sum(i.quantidade) as quantidade, sum(i.subtotal) as total
             from ItemVenda i
             where i.venda.status = 'FECHADA' and i.venda.createdAt between :inicio and :fim
-            group by i.nomeProdutoSnapshot
+            group by i.produto.id, i.nomeProdutoSnapshot
             order by sum(i.quantidade) desc
             """)
     List<RankingProduto> ranquearProdutos(@Param("inicio") Instant inicio, @Param("fim") Instant fim);
 
     interface RankingProduto {
+        Long getProdutoId();
         String getNome();
         Long getQuantidade();
         java.math.BigDecimal getTotal();

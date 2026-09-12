@@ -3,64 +3,141 @@
   <div class="page-header">
     <div>
       <h1>Estoque</h1>
-      <p class="text-muted">Saldo por variação e loja, com histórico completo de movimentações (kardex).</p>
+      <p class="text-muted">Navegue por marca, pesquise por produto e veja a grade completa de cada modelo.</p>
     </div>
     <button class="btn btn-primary" id="btn-lancar-estoque" (click)="abrirLancamento()">+ Lançar Estoque</button>
   </div>
 
-  <div class="table-container">
-    <table class="data-table grade-matrix">
-      <thead>
-        <tr>
-          <th>Produto</th>
-          <th>Tamanho</th>
-          <th>Cor</th>
-          <th>SKU</th>
-          <th>Loja</th>
-          <th>Quantidade</th>
-          <th>Mínimo</th>
-          <th>Status</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        @if (loading()) {
-          <tr><td colspan="9" class="text-center text-muted">Carregando...</td></tr>
-        } @else if (itens().length === 0) {
-          <tr><td colspan="9" class="text-center text-muted">Nenhum lançamento de estoque ainda.</td></tr>
-        } @else {
-          @for (item of itens(); track item.id) {
-            <tr>
-              <td>{{ item.produtoNome }}</td>
-              <td>{{ item.tamanhoValor ?? '—' }}</td>
-              <td>{{ item.corNome ?? '—' }}</td>
-              <td>{{ item.sku ?? '—' }}</td>
-              <td>{{ item.lojaNome }}</td>
-              <td class="grade-cell"
-                  [class.qty-zero]="item.statusEstoque === 'ZERADO'"
-                  [class.qty-low]="item.statusEstoque === 'BAIXO'"
-                  [class.qty-ok]="item.statusEstoque === 'OK'">
-                {{ item.quantidade }}
-              </td>
-              <td>{{ item.estoqueMinimo }}</td>
-              <td>
-                <span class="badge"
-                      [class.badge-danger]="item.statusEstoque === 'ZERADO'"
-                      [class.badge-warning]="item.statusEstoque === 'BAIXO'"
-                      [class.badge-success]="item.statusEstoque === 'OK'">
-                  {{ item.statusEstoque === 'ZERADO' ? 'Zerado' : item.statusEstoque === 'BAIXO' ? 'Baixo' : 'OK' }}
-                </span>
-              </td>
-              <td class="d-flex gap-1">
-                <button class="btn btn-outline btn-sm" (click)="ajustarLinha(item)">Ajustar</button>
-                <button class="btn btn-secondary btn-sm" (click)="verHistorico(item)">Histórico</button>
-              </td>
-            </tr>
-          }
-        }
-      </tbody>
-    </table>
+  @if (error()) {
+    <div class="form-error mb-2">⚠ {{ error() }}</div>
+  }
+
+  <!-- ── Marcas ───────────────────────────────────────────────────── -->
+  <div class="marcas-row">
+    <button class="marca-chip" [class.active]="marcaSelecionada() === null" (click)="marcaSelecionada.set(null)">
+      Todas as marcas
+    </button>
+    @for (m of marcas(); track m.id) {
+      <button class="marca-chip" [class.active]="marcaSelecionada() === m.id" (click)="marcaSelecionada.set(m.id)">
+        {{ m.nome }} <span class="marca-count">{{ m.quantidadeProdutos }}</span>
+      </button>
+    }
   </div>
+
+  <!-- ── Filtros ──────────────────────────────────────────────────── -->
+  <div class="card mb-3">
+    <div class="card-body filtros">
+      <input type="text" class="form-control" placeholder="Buscar por nome do produto..."
+             id="input-busca-estoque"
+             [ngModel]="busca()" (ngModelChange)="busca.set($event)">
+      <select class="form-control" [ngModel]="filtroTamanho()" (ngModelChange)="filtroTamanho.set($event)">
+        <option value="">Todos os tamanhos</option>
+        @for (t of tamanhosDisponiveis(); track t) {
+          <option [value]="t">{{ t }}</option>
+        }
+      </select>
+      <select class="form-control" [ngModel]="filtroCor()" (ngModelChange)="filtroCor.set($event)">
+        <option [ngValue]="null">Todas as cores</option>
+        @for (c of coresDisponiveis(); track c.id) {
+          <option [ngValue]="c.id">{{ c.nome }}</option>
+        }
+      </select>
+      <input type="text" class="form-control" placeholder="Código de barras / SKU..."
+             [ngModel]="filtroCodigoBarras()" (ngModelChange)="filtroCodigoBarras.set($event)">
+      <button class="btn btn-outline btn-sm" (click)="limparFiltros()">Limpar filtros</button>
+    </div>
+  </div>
+
+  <!-- ── Grid de produtos ─────────────────────────────────────────── -->
+  @if (loading()) {
+    <p class="text-muted text-center">Carregando...</p>
+  } @else if (produtosAgrupados().length === 0) {
+    <p class="text-muted text-center">Nenhum produto encontrado com os filtros atuais.</p>
+  } @else {
+    <div class="produtos-grid">
+      @for (p of produtosAgrupados(); track p.produtoId) {
+        <button class="produto-card" (click)="abrirProduto(p)">
+          <img [src]="imagemDoProduto(p.produtoNome, p.fotoPrincipalUrl)" alt="" class="produto-imagem">
+          <div class="produto-info">
+            <span class="produto-nome">{{ p.produtoNome }}</span>
+            <span class="produto-marca text-muted">{{ p.marcaNome ?? '—' }} · {{ p.categoriaNome ?? '—' }}</span>
+            <div class="produto-footer">
+              <span class="produto-qtd" [class.qty-zero]="p.statusPior === 'ZERADO'" [class.qty-low]="p.statusPior === 'BAIXO'">
+                {{ p.quantidadeTotal }} un.
+              </span>
+              <span class="produto-variacoes text-muted">{{ p.variacoesCount }} variações</span>
+            </div>
+          </div>
+        </button>
+      }
+    </div>
+  }
+
+  <!-- ── Modal: detalhe do produto (grade completa) ──────────────── -->
+  @if (produtoSelecionado(); as p) {
+    <app-modal [titulo]="p.produtoNome" [maxWidth]="800" (fechar)="fecharProduto()">
+      <div class="detalhe-header">
+        <img [src]="imagemDoProduto(p.produtoNome, p.fotoPrincipalUrl)" alt="" class="detalhe-imagem">
+        <div>
+          <p class="text-muted">{{ p.marcaNome ?? '—' }} · {{ p.categoriaNome ?? '—' }}</p>
+          <p><strong>{{ p.quantidadeTotal }}</strong> unidades em estoque (com os filtros atuais)</p>
+        </div>
+      </div>
+
+      @if (totaisPorTamanho().length > 0) {
+        <div class="totais-tamanho">
+          @for (t of totaisPorTamanho(); track t.tamanho) {
+            <div class="total-tamanho-item">
+              <span class="tamanho-label">{{ t.tamanho }}</span>
+              <span class="tamanho-total">{{ t.total }}</span>
+            </div>
+          }
+        </div>
+      }
+
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr><th>Tamanho</th><th>Cor</th><th>SKU</th><th>Código de Barras</th><th>Loja</th><th>Qtd.</th><th>Status</th><th></th></tr>
+          </thead>
+          <tbody>
+            @for (item of variacoesDoProdutoSelecionado(); track item.id) {
+              <tr>
+                <td>{{ item.tamanhoValor ?? '—' }}</td>
+                <td>
+                  @if (item.corHex) {
+                    <span class="cor-swatch" [style.background]="item.corHex"></span>
+                  }
+                  {{ item.corNome ?? '—' }}
+                </td>
+                <td>{{ item.sku ?? '—' }}</td>
+                <td>{{ item.codigoBarras ?? '—' }}</td>
+                <td>{{ item.lojaNome }}</td>
+                <td class="grade-cell"
+                    [class.qty-zero]="item.statusEstoque === 'ZERADO'"
+                    [class.qty-low]="item.statusEstoque === 'BAIXO'"
+                    [class.qty-ok]="item.statusEstoque === 'OK'">
+                  {{ item.quantidade }}
+                </td>
+                <td>
+                  <span class="badge"
+                        [class.badge-danger]="item.statusEstoque === 'ZERADO'"
+                        [class.badge-warning]="item.statusEstoque === 'BAIXO'"
+                        [class.badge-success]="item.statusEstoque === 'OK'">
+                    {{ item.statusEstoque === 'ZERADO' ? 'Zerado' : item.statusEstoque === 'BAIXO' ? 'Baixo' : 'OK' }}
+                  </span>
+                </td>
+                <td class="d-flex gap-1">
+                  <button class="btn btn-outline btn-sm" (click)="ajustarLinha(item)">Ajustar</button>
+                  <button class="btn btn-secondary btn-sm" (click)="verHistorico(item)">Histórico</button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </app-modal>
+  }
 
   <!-- ── Modal: lançar/ajustar movimento ─────────────────────────── -->
   @if (showAjuste()) {
@@ -73,7 +150,7 @@
           <label class="form-label">Produto / Variação *</label>
           <select class="form-control" formControlName="variacaoId" id="select-variacao">
             <option [ngValue]="null">Selecione...</option>
-            @for (v of variacoes(); track v.id) {
+            @for (v of variacoesCatalogo(); track v.id) {
               <option [ngValue]="v.id">{{ descricaoVariacao(v) }}</option>
             }
           </select>

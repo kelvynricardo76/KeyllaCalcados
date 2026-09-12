@@ -7,6 +7,7 @@ export interface VendaResumo {
 }
 
 export interface ProdutoRanking {
+  produtoId: number;
   nomeProduto: string;
   quantidadeVendida: number;
   valorTotal: number;
@@ -19,5 +20,25 @@ export interface RelatorioVendas {
   quantidadeVendas: number;
   ticketMedio: number;
   vendas: VendaResumo[];
-  topProdutos: ProdutoRanking[];
+  maisVendidos: ProdutoRanking[];
+  menosVendidos: ProdutoRanking[];
+  produtosSemVenda: string[];
+}
+
+export interface FuncionarioRanking {
+  usuarioId: number;
+  nome: string;
+  perfil: string;
+  quantidadeVendas: number;
+  valorTotal: number;
+  ticketMedio: number;
+}
+
+export interface ProdutoVencendo {
+  produtoId: number;
+  nomeProduto: string;
+  marcaNome?: string | null;
+  dataValidade: string;
+  diasParaVencer: number;
+  vencido: boolean;
 }

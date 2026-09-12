@@ -22,8 +22,34 @@
   display: grid;
   grid-template-columns: 2fr 1fr;
   gap: 20px;
+  align-items: start;
+}
+
+.ranking-col {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 @media (max-width: 900px) {
   .relatorio-grid { grid-template-columns: 1fr; }
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  background: var(--surface-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.vencimento-filtro select {
+  min-width: 180px;
 }

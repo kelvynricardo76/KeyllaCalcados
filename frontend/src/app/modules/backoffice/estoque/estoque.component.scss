@@ -6,16 +6,196 @@
   h1 { margin: 0; font-size: 1.6rem; }
 }
 
+// ── Marcas ─────────────────────────────────────────────────────────
+.marcas-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.marca-chip {
+  border: 1px solid var(--border-color);
+  background: var(--surface-card);
+  color: var(--text-secondary);
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  &:hover { border-color: var(--primary-color); color: var(--primary-color); }
+
+  &.active {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: #fff;
+
+    .marca-count { background: rgba(255, 255, 255, 0.25); color: #fff; }
+  }
+}
+
+.marca-count {
+  background: var(--surface-bg);
+  color: var(--text-muted);
+  border-radius: 999px;
+  padding: 1px 8px;
+  font-size: 0.75rem;
+}
+
+// ── Filtros ────────────────────────────────────────────────────────
+.filtros {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1.4fr auto;
+  gap: 12px;
+  padding: 16px 20px !important;
+  align-items: center;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+// ── Grid de produtos ───────────────────────────────────────────────
+.produtos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.produto-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  text-align: left;
+  background: var(--surface-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  padding: 14px;
+  cursor: pointer;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+  font: inherit;
+  color: inherit;
+
+  &:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+    border-color: var(--primary-color);
+  }
+}
+
+.produto-imagem {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: var(--border-radius-sm);
+  margin-bottom: 10px;
+  background: var(--surface-bg);
+}
+
+.produto-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.produto-nome {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.produto-marca {
+  font-size: 0.8rem;
+}
+
+.produto-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 6px;
+}
+
+.produto-qtd {
+  font-weight: 700;
+  color: var(--success-color, #16a34a);
+
+  &.qty-low { color: var(--warning-color, #d97706); }
+  &.qty-zero { color: var(--danger-color, #dc2626); }
+}
+
+.produto-variacoes {
+  font-size: 0.75rem;
+}
+
+// ── Detalhe do produto (modal) ─────────────────────────────────────
+.detalhe-header {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.detalhe-imagem {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.totais-tamanho {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.total-tamanho-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  padding: 6px 12px;
+  min-width: 52px;
+}
+
+.tamanho-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.tamanho-total {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.cor-swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid var(--border-color);
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.grade-cell {
+  font-weight: 600;
+
+  &.qty-ok { color: var(--success-color, #16a34a); }
+  &.qty-low { color: var(--warning-color, #d97706); }
+  &.qty-zero { color: var(--danger-color, #dc2626); }
+}
+
+// ── Formulário de lançamento ───────────────────────────────────────
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
 }
-
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 8px;
-}
-

@@ -1,0 +1,76 @@
+<div class="funcionarios-page animate-fade-in">
+
+  <div class="page-header">
+    <div>
+      <h1>Funcionários</h1>
+      <p class="text-muted">Desempenho de vendas por funcionário no período selecionado.</p>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-body filtro-periodo">
+      <div class="form-group">
+        <label class="form-label">De</label>
+        <input type="date" class="form-control" [(ngModel)]="inicio">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Até</label>
+        <input type="date" class="form-control" [(ngModel)]="fim">
+      </div>
+      <button class="btn btn-primary" (click)="buscar()">Filtrar</button>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <p class="text-muted text-center">Carregando...</p>
+  } @else if (error()) {
+    <div class="form-error">⚠ {{ error() }}</div>
+  } @else {
+    <div class="kpi-grid mb-3">
+      <div class="kpi-card">
+        <p class="kpi-label">Total Vendido pela Equipe</p>
+        <p class="kpi-value">{{ totalVendido() | currency:'BRL' }}</p>
+      </div>
+      <div class="kpi-card">
+        <p class="kpi-label">Vendas Realizadas</p>
+        <p class="kpi-value">{{ totalVendas() }}</p>
+      </div>
+      <div class="kpi-card">
+        <p class="kpi-label">Funcionários com Vendas</p>
+        <p class="kpi-value">{{ ranking().length }}</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h3>Ranking de Vendas</h3></div>
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr><th>#</th><th>Funcionário</th><th>Perfil</th><th>Qtd. Vendas</th><th>Valor Total</th><th>Ticket Médio</th><th>% do Total</th></tr>
+          </thead>
+          <tbody>
+            @if (ranking().length === 0) {
+              <tr><td colspan="7" class="text-center text-muted">Nenhuma venda registrada no período.</td></tr>
+            }
+            @for (f of ranking(); track f.usuarioId; let i = $index) {
+              <tr>
+                <td>{{ i + 1 }}º</td>
+                <td>{{ f.nome }}</td>
+                <td>{{ f.perfil }}</td>
+                <td>{{ f.quantidadeVendas }}</td>
+                <td>{{ f.valorTotal | currency:'BRL' }}</td>
+                <td>{{ f.ticketMedio | currency:'BRL' }}</td>
+                <td>
+                  <div class="barra-percentual">
+                    <div class="barra-fill" [style.width.%]="percentualDoTotal(f)"></div>
+                    <span>{{ percentualDoTotal(f) | number:'1.0-1' }}%</span>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+</div>

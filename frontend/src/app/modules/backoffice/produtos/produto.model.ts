@@ -50,6 +50,7 @@ export interface Produto {
   margemPercentual: number;
   temGrade: boolean;
   fotoPrincipalUrl?: string | null;
+  dataValidade?: string | null;
   ativo: boolean;
 }
 
@@ -63,6 +64,8 @@ export interface ProdutoRequest {
   precoCusto: number;
   precoVenda: number;
   temGrade: boolean;
+  fotoPrincipalUrl?: string | null;
+  dataValidade?: string | null;
 }
 
 export interface Variacao {

@@ -80,6 +80,8 @@ public class ProdutoService {
         produto.setPrecoCusto(request.precoCusto());
         produto.setPrecoVenda(request.precoVenda());
         produto.setTemGrade(request.temGrade());
+        produto.setFotoPrincipalUrl(request.fotoPrincipalUrl());
+        produto.setDataValidade(request.dataValidade());
         produto.setMarca(request.marcaId() != null ? buscarMarca(request.marcaId()) : null);
         produto.setCategoria(request.categoriaId() != null ? buscarCategoria(request.categoriaId()) : null);
     }
@@ -116,6 +118,6 @@ public class ProdutoService {
                 categoria != null ? categoria.getId() : null,
                 categoria != null ? categoria.getNome() : null,
                 p.getCodigoBarras(), p.getSku(), p.getPrecoCusto(), p.getPrecoVenda(),
-                margem, p.isTemGrade(), p.getFotoPrincipalUrl(), p.isAtivo());
+                margem, p.isTemGrade(), p.getFotoPrincipalUrl(), p.getDataValidade(), p.isAtivo());
     }
 }

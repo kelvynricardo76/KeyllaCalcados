@@ -3,7 +3,7 @@
   <div class="page-header">
     <div>
       <h1>Relatórios</h1>
-      <p class="text-muted">Vendas, ticket médio e produtos mais vendidos por período.</p>
+      <p class="text-muted">Vendas, ticket médio, produtos mais/menos vendidos e validade por período.</p>
     </div>
   </div>
 
@@ -66,26 +66,99 @@
         </div>
       </div>
 
-      <div class="card">
-        <div class="card-header"><h3>Mais Vendidos</h3></div>
-        <div class="table-container">
-          <table class="data-table">
-            <thead><tr><th>Produto</th><th>Qtd.</th><th>Total</th></tr></thead>
-            <tbody>
-              @if (r.topProdutos.length === 0) {
-                <tr><td colspan="3" class="text-center text-muted">Sem dados.</td></tr>
-              }
-              @for (p of r.topProdutos; track p.nomeProduto) {
-                <tr>
-                  <td>{{ p.nomeProduto }}</td>
-                  <td>{{ p.quantidadeVendida }}</td>
-                  <td>{{ p.valorTotal | currency:'BRL' }}</td>
-                </tr>
-              }
-            </tbody>
-          </table>
+      <div class="ranking-col">
+        <div class="card">
+          <div class="card-header"><h3>Mais Vendidos</h3></div>
+          <div class="table-container">
+            <table class="data-table">
+              <thead><tr><th>Produto</th><th>Qtd.</th><th>Total</th></tr></thead>
+              <tbody>
+                @if (r.maisVendidos.length === 0) {
+                  <tr><td colspan="3" class="text-center text-muted">Sem dados.</td></tr>
+                }
+                @for (p of r.maisVendidos; track p.produtoId) {
+                  <tr>
+                    <td>{{ p.nomeProduto }}</td>
+                    <td>{{ p.quantidadeVendida }}</td>
+                    <td>{{ p.valorTotal | currency:'BRL' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
         </div>
+
+        <div class="card">
+          <div class="card-header"><h3>Menos Vendidos</h3></div>
+          <div class="table-container">
+            <table class="data-table">
+              <thead><tr><th>Produto</th><th>Qtd.</th><th>Total</th></tr></thead>
+              <tbody>
+                @if (r.menosVendidos.length === 0) {
+                  <tr><td colspan="3" class="text-center text-muted">Sem dados.</td></tr>
+                }
+                @for (p of r.menosVendidos; track p.produtoId) {
+                  <tr>
+                    <td>{{ p.nomeProduto }}</td>
+                    <td>{{ p.quantidadeVendida }}</td>
+                    <td>{{ p.valorTotal | currency:'BRL' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        @if (r.produtosSemVenda.length > 0) {
+          <div class="card">
+            <div class="card-header"><h3>Sem Venda no Período</h3></div>
+            <div class="card-body">
+              <div class="chips">
+                @for (nome of r.produtosSemVenda; track nome) {
+                  <span class="chip">{{ nome }}</span>
+                }
+              </div>
+            </div>
+          </div>
+        }
       </div>
     </div>
   }
+
+  <!-- ── Produtos próximos do vencimento ─────────────────────────── -->
+  <div class="card mt-3">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h3>Produtos Próximos do Vencimento</h3>
+      <div class="vencimento-filtro">
+        <select class="form-control" [ngModel]="diasVencimento()" (ngModelChange)="diasVencimento.set($event); buscarVencendo()">
+          <option [ngValue]="7">Próximos 7 dias</option>
+          <option [ngValue]="15">Próximos 15 dias</option>
+          <option [ngValue]="30">Próximos 30 dias</option>
+          <option [ngValue]="90">Próximos 90 dias</option>
+        </select>
+      </div>
+    </div>
+    <div class="table-container">
+      <table class="data-table">
+        <thead><tr><th>Produto</th><th>Marca</th><th>Validade</th><th>Situação</th></tr></thead>
+        <tbody>
+          @if (vencendo().length === 0) {
+            <tr><td colspan="4" class="text-center text-muted">Nenhum produto com validade cadastrada no período selecionado.</td></tr>
+          }
+          @for (v of vencendo(); track v.produtoId) {
+            <tr>
+              <td>{{ v.nomeProduto }}</td>
+              <td>{{ v.marcaNome ?? '—' }}</td>
+              <td>{{ v.dataValidade | date:'dd/MM/yyyy' }}</td>
+              <td>
+                <span class="badge" [class.badge-danger]="v.vencido" [class.badge-warning]="!v.vencido">
+                  {{ v.vencido ? 'Vencido' : 'Vence em ' + v.diasParaVencer + ' dia(s)' }}
+                </span>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
 </div>

@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ProdutoService } from './produto.service';
 import { Categoria, Cor, Marca, Produto, Tamanho, Variacao } from './produto.model';
 import { ModalComponent } from '../../../shared/components/modal/modal.component';
+import { imagemFake } from '../../../shared/utils/fake-image';
 
 @Component({
   selector: 'app-produtos',
@@ -42,7 +43,9 @@ export class ProdutosComponent implements OnInit {
     sku: [''],
     precoCusto: [0, [Validators.required, Validators.min(0)]],
     precoVenda: [0, [Validators.required, Validators.min(0)]],
-    temGrade: [false]
+    temGrade: [false],
+    fotoPrincipalUrl: [''],
+    dataValidade: ['']
   });
 
   variacaoForm = this.fb.nonNullable.group({
@@ -85,7 +88,8 @@ export class ProdutosComponent implements OnInit {
     this.error.set('');
     this.form.reset({
       nome: '', descricao: '', marcaId: null, categoriaId: null,
-      codigoBarras: '', sku: '', precoCusto: 0, precoVenda: 0, temGrade: false
+      codigoBarras: '', sku: '', precoCusto: 0, precoVenda: 0, temGrade: false,
+      fotoPrincipalUrl: '', dataValidade: ''
     });
     this.showForm.set(true);
   }
@@ -102,7 +106,9 @@ export class ProdutosComponent implements OnInit {
       sku: produto.sku ?? '',
       precoCusto: produto.precoCusto,
       precoVenda: produto.precoVenda,
-      temGrade: produto.temGrade
+      temGrade: produto.temGrade,
+      fotoPrincipalUrl: produto.fotoPrincipalUrl ?? '',
+      dataValidade: produto.dataValidade ?? ''
     });
     this.showForm.set(true);
     if (produto.temGrade) {
@@ -192,4 +198,14 @@ export class ProdutosComponent implements OnInit {
   get precoCustoCtrl() { return this.form.controls.precoCusto; }
   get precoVendaCtrl() { return this.form.controls.precoVenda; }
   get temGrade() { return this.form.controls.temGrade.value; }
+
+  imagemDoProduto(produto: Produto): string {
+    return produto.fotoPrincipalUrl || imagemFake(produto.nome);
+  }
+
+  get previewImagem(): string {
+    const url = this.form.controls.fotoPrincipalUrl.value;
+    const nome = this.form.controls.nome.value;
+    return url || imagemFake(nome || '?');
+  }
 }

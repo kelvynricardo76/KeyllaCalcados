@@ -32,6 +32,7 @@ export class BackofficeLayoutComponent {
     { label: 'Caixa',       icon: '💰', route: '/backoffice/caixa', perfis: ['ADMIN','GERENTE'] },
     { label: 'Fiado',       icon: '📋', route: '/backoffice/fiado' },
     { label: 'Relatórios',  icon: '📈', route: '/backoffice/relatorios', perfis: ['ADMIN','GERENTE'] },
+    { label: 'Funcionários', icon: '🧑‍💼', route: '/backoffice/funcionarios', perfis: ['ADMIN','GERENTE'] },
     { label: 'Usuários',    icon: '⚙️',  route: '/backoffice/usuarios', perfis: ['ADMIN'] },
   ];
 

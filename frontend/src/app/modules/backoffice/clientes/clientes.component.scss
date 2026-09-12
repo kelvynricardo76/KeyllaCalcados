@@ -36,24 +36,3 @@
   margin-top: 8px;
 }
 
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(13, 27, 75, 0.45);
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 40px 20px;
-  overflow-y: auto;
-  z-index: 200;
-}
-
-.modal-panel {
-  background: var(--surface-card);
-  border-radius: var(--border-radius-lg);
-  box-shadow: var(--shadow-lg);
-  width: 100%;
-  max-width: 640px;
-  max-height: calc(100vh - 80px);
-  overflow-y: auto;
-}

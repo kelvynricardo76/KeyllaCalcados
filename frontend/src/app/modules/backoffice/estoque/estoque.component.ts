@@ -5,11 +5,12 @@ import { EstoqueService } from './estoque.service';
 import { EstoqueItem, Loja, Movimentacao, TipoMovEstoque } from './estoque.model';
 import { ProdutoService } from '../produtos/produto.service';
 import { Variacao } from '../produtos/produto.model';
+import { ModalComponent } from '../../../shared/components/modal/modal.component';
 
 @Component({
   selector: 'app-estoque',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, ModalComponent],
   templateUrl: './estoque.component.html',
   styleUrl: './estoque.component.scss'
 })

@@ -62,19 +62,12 @@
   </div>
 
   @if (showForm()) {
-    <div class="modal-overlay" (click)="fecharForm()">
-      <div class="modal-panel" (click)="$event.stopPropagation()">
-        <div class="card-header">
-          <h3>{{ editingId() ? 'Editar Cliente' : 'Novo Cliente' }}</h3>
-          <button class="btn btn-icon btn-outline" (click)="fecharForm()">✕</button>
-        </div>
+    <app-modal [titulo]="editingId() ? 'Editar Cliente' : 'Novo Cliente'" (fechar)="fecharForm()">
+      @if (error()) {
+        <div class="form-error mb-2">⚠ {{ error() }}</div>
+      }
 
-        <div class="card-body">
-          @if (error()) {
-            <div class="form-error mb-2">⚠ {{ error() }}</div>
-          }
-
-          <form [formGroup]="form" (ngSubmit)="salvar()">
+      <form [formGroup]="form">
             <div class="form-group">
               <label class="form-label">Nome *</label>
               <input class="form-control" formControlName="nome" id="input-nome-cliente">
@@ -156,15 +149,14 @@
               <textarea class="form-control" rows="2" formControlName="observacoes"></textarea>
             </div>
 
-            <div class="form-actions">
-              <button type="button" class="btn btn-outline" (click)="fecharForm()">Cancelar</button>
-              <button type="submit" class="btn btn-primary" [disabled]="saving()" id="btn-salvar-cliente">
-                {{ saving() ? 'Salvando...' : 'Salvar' }}
-              </button>
-            </div>
-          </form>
-        </div>
+      </form>
+
+      <div modal-footer>
+        <button type="button" class="btn btn-outline" (click)="fecharForm()">Cancelar</button>
+        <button type="button" class="btn btn-primary" [disabled]="saving()" (click)="salvar()" id="btn-salvar-cliente">
+          {{ saving() ? 'Salvando...' : 'Salvar' }}
+        </button>
       </div>
-    </div>
+    </app-modal>
   }
 </div>

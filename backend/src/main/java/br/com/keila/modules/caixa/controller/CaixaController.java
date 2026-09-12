@@ -30,6 +30,11 @@ public class CaixaController {
         return ResponseEntity.ok(caixaService.buscarSessao(id));
     }
 
+    @GetMapping("/api/v1/sessoes")
+    public List<SessaoResponse> listarSessoes() {
+        return caixaService.listarSessoes();
+    }
+
     @PostMapping("/api/v1/sessoes/{id}/fechar")
     public ResponseEntity<SessaoResponse> fecharSessao(@PathVariable Long id, @Valid @RequestBody FecharSessaoRequest request) {
         return ResponseEntity.ok(caixaService.fecharSessao(id, request));

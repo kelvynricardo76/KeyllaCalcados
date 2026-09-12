@@ -6,8 +6,8 @@
     @if (sessao(); as s) {
       <span class="pdv-info">{{ s.caixaNome }} · Aberto às {{ s.dataAbertura | date:'HH:mm' }}</span>
       <div class="pdv-actions">
-        <button class="btn btn-outline btn-sm" (click)="abrirSangria('SUPRIMENTO')">+ Suprimento</button>
-        <button class="btn btn-outline btn-sm" (click)="abrirSangria('SANGRIA')">− Sangria</button>
+        <button class="btn btn-outline btn-sm" (click)="abrirSangria('SUPRIMENTO')">+ Entrada de Caixa</button>
+        <button class="btn btn-outline btn-sm" (click)="abrirSangria('SANGRIA')">− Saída de Caixa</button>
         <button class="btn btn-danger btn-sm" (click)="abrirFechamento()">Fechar Caixa</button>
       </div>
     }
@@ -128,119 +128,97 @@
 
   <!-- ── Modal: pagamento ──────────────────────────────────────────── -->
   @if (showPagamento() && venda(); as v) {
-    <div class="modal-overlay" (click)="fecharPagamento()">
-      <div class="modal-panel" (click)="$event.stopPropagation()">
-        <div class="card-header">
-          <h3>Finalizar Venda #{{ v.id }}</h3>
-          <button class="btn btn-icon btn-outline" (click)="fecharPagamento()">✕</button>
-        </div>
-        <div class="card-body">
-          @if (error()) {
-            <div class="form-error mb-2">⚠ {{ error() }}</div>
-          }
-          <p class="text-muted">Cliente: <strong>{{ nomeClienteSelecionado() }}</strong></p>
+    <app-modal [titulo]="'Finalizar Venda #' + v.id" [maxWidth]="520" (fechar)="fecharPagamento()">
+      @if (error()) {
+        <div class="form-error mb-2">⚠ {{ error() }}</div>
+      }
+      <p class="text-muted">Cliente: <strong>{{ nomeClienteSelecionado() }}</strong></p>
 
-          <div class="form-group">
-            <label class="form-label">Desconto Geral</label>
-            <input type="number" step="0.01" min="0" class="form-control"
-                   [(ngModel)]="descontoGeral" (ngModelChange)="novoPagamentoValor = faltaPagar()">
-          </div>
+      <div class="form-group">
+        <label class="form-label">Desconto Geral</label>
+        <input type="number" step="0.01" min="0" class="form-control"
+               [(ngModel)]="descontoGeral" (ngModelChange)="novoPagamentoValor = faltaPagar()">
+      </div>
 
-          <div class="resumo-pagamento">
-            <div><span>Total a pagar</span><strong>{{ totalAPagar() | currency:'BRL' }}</strong></div>
-            <div><span>Já lançado</span><strong>{{ totalPago() | currency:'BRL' }}</strong></div>
-            @if (faltaPagar() > 0) {
-              <div class="destaque-falta"><span>Falta</span><strong>{{ faltaPagar() | currency:'BRL' }}</strong></div>
-            } @else if (trocoPrevisto() > 0) {
-              <div class="destaque-troco"><span>Troco</span><strong>{{ trocoPrevisto() | currency:'BRL' }}</strong></div>
-            }
-          </div>
+      <div class="resumo-pagamento">
+        <div><span>Total a pagar</span><strong>{{ totalAPagar() | currency:'BRL' }}</strong></div>
+        <div><span>Já lançado</span><strong>{{ totalPago() | currency:'BRL' }}</strong></div>
+        @if (faltaPagar() > 0) {
+          <div class="destaque-falta"><span>Falta</span><strong>{{ faltaPagar() | currency:'BRL' }}</strong></div>
+        } @else if (trocoPrevisto() > 0) {
+          <div class="destaque-troco"><span>Troco</span><strong>{{ trocoPrevisto() | currency:'BRL' }}</strong></div>
+        }
+      </div>
 
-          <div class="form-row add-pagamento">
-            <select class="form-control" [(ngModel)]="novoPagamentoForma">
-              <option value="DINHEIRO">Dinheiro</option>
-              <option value="DEBITO">Débito</option>
-              <option value="CREDITO">Crédito</option>
-              <option value="PIX">PIX</option>
-              <option value="FIADO">Fiado</option>
-              <option value="OUTRO">Outro</option>
-            </select>
-            <input type="number" step="0.01" min="0.01" class="form-control" [(ngModel)]="novoPagamentoValor">
-            <button class="btn btn-secondary" (click)="adicionarPagamento()">+ Adicionar</button>
-          </div>
+      <div class="form-row add-pagamento">
+        <select class="form-control" [(ngModel)]="novoPagamentoForma">
+          <option value="DINHEIRO">Dinheiro</option>
+          <option value="DEBITO">Débito</option>
+          <option value="CREDITO">Crédito</option>
+          <option value="PIX">PIX</option>
+          <option value="FIADO">Fiado</option>
+          <option value="OUTRO">Outro</option>
+        </select>
+        <input type="number" step="0.01" min="0.01" class="form-control" [(ngModel)]="novoPagamentoValor">
+        <button class="btn btn-secondary" (click)="adicionarPagamento()">+ Adicionar</button>
+      </div>
 
-          @if (pagamentos().length > 0) {
-            <div class="lista-pagamentos">
-              @for (p of pagamentos(); track $index) {
-                <div class="pagamento-linha">
-                  <span>{{ p.forma }}</span>
-                  <span>{{ p.valor | currency:'BRL' }}</span>
-                  <button class="btn-remove" (click)="removerPagamento($index)">✕</button>
-                </div>
-              }
+      @if (pagamentos().length > 0) {
+        <div class="lista-pagamentos">
+          @for (p of pagamentos(); track $index) {
+            <div class="pagamento-linha">
+              <span>{{ p.forma }}</span>
+              <span>{{ p.valor | currency:'BRL' }}</span>
+              <button class="btn-remove" (click)="removerPagamento($index)">✕</button>
             </div>
           }
-
-          <div class="form-actions">
-            <button class="btn btn-outline" (click)="fecharPagamento()">Cancelar</button>
-            <button class="btn btn-primary" [disabled]="faltaPagar() > 0" (click)="confirmarFinalizacao()" id="btn-confirmar-venda">
-              Confirmar Pagamento
-            </button>
-          </div>
         </div>
+      }
+
+      <div modal-footer>
+        <button class="btn btn-outline" (click)="fecharPagamento()">Cancelar</button>
+        <button class="btn btn-primary" [disabled]="faltaPagar() > 0" (click)="confirmarFinalizacao()" id="btn-confirmar-venda">
+          Confirmar Pagamento
+        </button>
       </div>
-    </div>
+    </app-modal>
   }
 
-  <!-- ── Modal: sangria/suprimento ─────────────────────────────────── -->
+  <!-- ── Modal: entrada/saída de caixa ────────────────────────────── -->
   @if (showSangria()) {
-    <div class="modal-overlay" (click)="fecharSangria()">
-      <div class="modal-panel" (click)="$event.stopPropagation()">
-        <div class="card-header">
-          <h3>{{ sangriaTipo === 'SANGRIA' ? 'Sangria (retirada)' : 'Suprimento (entrada)' }}</h3>
-          <button class="btn btn-icon btn-outline" (click)="fecharSangria()">✕</button>
-        </div>
-        <div class="card-body">
-          <div class="form-group">
-            <label class="form-label">Valor</label>
-            <input type="number" step="0.01" min="0.01" class="form-control" [(ngModel)]="sangriaValor">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Descrição</label>
-            <input type="text" class="form-control" [(ngModel)]="sangriaDescricao" placeholder="Ex.: pagamento fornecedor, troco extra...">
-          </div>
-          <div class="form-actions">
-            <button class="btn btn-outline" (click)="fecharSangria()">Cancelar</button>
-            <button class="btn btn-primary" (click)="confirmarSangria()">Confirmar</button>
-          </div>
-        </div>
+    <app-modal [titulo]="sangriaTipo === 'SANGRIA' ? 'Saída de Caixa' : 'Entrada de Caixa'" (fechar)="fecharSangria()">
+      <div class="form-group">
+        <label class="form-label">Valor</label>
+        <input type="number" step="0.01" min="0.01" class="form-control" [(ngModel)]="sangriaValor">
       </div>
-    </div>
+      <div class="form-group">
+        <label class="form-label">Descrição</label>
+        <input type="text" class="form-control" [(ngModel)]="sangriaDescricao" placeholder="Ex.: pagamento fornecedor, troco extra...">
+      </div>
+
+      <div modal-footer>
+        <button class="btn btn-outline" (click)="fecharSangria()">Cancelar</button>
+        <button class="btn btn-primary" (click)="confirmarSangria()">Confirmar</button>
+      </div>
+    </app-modal>
   }
 
   <!-- ── Modal: fechamento de caixa ────────────────────────────────── -->
   @if (showFechamento()) {
-    <div class="modal-overlay" (click)="fecharModalFechamento()">
-      <div class="modal-panel" (click)="$event.stopPropagation()">
-        <div class="card-header">
-          <h3>Fechar Caixa</h3>
-          <button class="btn btn-icon btn-outline" (click)="fecharModalFechamento()">✕</button>
-        </div>
-        <div class="card-body">
-          <div class="form-group">
-            <label class="form-label">Valor contado no caixa</label>
-            <input type="number" step="0.01" min="0" class="form-control" [(ngModel)]="valorFechamentoInformado">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Observações</label>
-            <textarea class="form-control" rows="2" [(ngModel)]="observacoesFechamento"></textarea>
-          </div>
-          <div class="form-actions">
-            <button class="btn btn-outline" (click)="fecharModalFechamento()">Cancelar</button>
-            <button class="btn btn-danger" (click)="confirmarFechamentoCaixa()" id="btn-confirmar-fechamento">Fechar Caixa</button>
-          </div>
-        </div>
+    <app-modal titulo="Fechar Caixa" (fechar)="fecharModalFechamento()">
+      <div class="form-group">
+        <label class="form-label">Valor contado no caixa</label>
+        <input type="number" step="0.01" min="0" class="form-control" [(ngModel)]="valorFechamentoInformado">
       </div>
-    </div>
+      <div class="form-group">
+        <label class="form-label">Observações</label>
+        <textarea class="form-control" rows="2" [(ngModel)]="observacoesFechamento"></textarea>
+      </div>
+
+      <div modal-footer>
+        <button class="btn btn-outline" (click)="fecharModalFechamento()">Cancelar</button>
+        <button class="btn btn-danger" (click)="confirmarFechamentoCaixa()" id="btn-confirmar-fechamento">Fechar Caixa</button>
+      </div>
+    </app-modal>
   }
 </div>

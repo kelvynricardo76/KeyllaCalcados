@@ -40,53 +40,46 @@
   </div>
 
   @if (showForm()) {
-    <div class="modal-overlay" (click)="fecharForm()">
-      <div class="modal-panel" (click)="$event.stopPropagation()">
-        <div class="card-header">
-          <h3>{{ editingId() ? 'Editar Usuário' : 'Novo Usuário' }}</h3>
-          <button class="btn btn-icon btn-outline" (click)="fecharForm()">✕</button>
-        </div>
-        <div class="card-body">
-          @if (error()) {
-            <div class="form-error mb-2">⚠ {{ error() }}</div>
+    <app-modal [titulo]="editingId() ? 'Editar Usuário' : 'Novo Usuário'" (fechar)="fecharForm()">
+      @if (error()) {
+        <div class="form-error mb-2">⚠ {{ error() }}</div>
+      }
+      <form [formGroup]="form">
+        <div class="form-group">
+          <label class="form-label">Nome *</label>
+          <input class="form-control" formControlName="nome">
+          @if (nomeCtrl.invalid && nomeCtrl.touched) {
+            <span class="form-error">⚠ Informe o nome</span>
           }
-          <form [formGroup]="form" (ngSubmit)="salvar()">
-            <div class="form-group">
-              <label class="form-label">Nome *</label>
-              <input class="form-control" formControlName="nome">
-              @if (nomeCtrl.invalid && nomeCtrl.touched) {
-                <span class="form-error">⚠ Informe o nome</span>
-              }
-            </div>
-            <div class="form-group">
-              <label class="form-label">E-mail *</label>
-              <input class="form-control" type="email" formControlName="email">
-              @if (emailCtrl.invalid && emailCtrl.touched) {
-                <span class="form-error">⚠ E-mail inválido</span>
-              }
-            </div>
-            <div class="form-group">
-              <label class="form-label">Perfil *</label>
-              <select class="form-control" formControlName="perfil">
-                @for (p of perfis; track p) {
-                  <option [value]="p">{{ p }}</option>
-                }
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">{{ editingId() ? 'Nova Senha (opcional)' : 'Senha *' }}</label>
-              <input class="form-control" type="password" formControlName="senha">
-              @if (senhaCtrl.invalid && senhaCtrl.touched) {
-                <span class="form-error">⚠ Mínimo 6 caracteres</span>
-              }
-            </div>
-            <div class="form-actions">
-              <button type="button" class="btn btn-outline" (click)="fecharForm()">Cancelar</button>
-              <button type="submit" class="btn btn-primary" [disabled]="saving()">{{ saving() ? 'Salvando...' : 'Salvar' }}</button>
-            </div>
-          </form>
         </div>
+        <div class="form-group">
+          <label class="form-label">E-mail *</label>
+          <input class="form-control" type="email" formControlName="email">
+          @if (emailCtrl.invalid && emailCtrl.touched) {
+            <span class="form-error">⚠ E-mail inválido</span>
+          }
+        </div>
+        <div class="form-group">
+          <label class="form-label">Perfil *</label>
+          <select class="form-control" formControlName="perfil">
+            @for (p of perfis; track p) {
+              <option [value]="p">{{ p }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">{{ editingId() ? 'Nova Senha (opcional)' : 'Senha *' }}</label>
+          <input class="form-control" type="password" formControlName="senha">
+          @if (senhaCtrl.invalid && senhaCtrl.touched) {
+            <span class="form-error">⚠ Mínimo 6 caracteres</span>
+          }
+        </div>
+      </form>
+
+      <div modal-footer>
+        <button type="button" class="btn btn-outline" (click)="fecharForm()">Cancelar</button>
+        <button type="button" class="btn btn-primary" [disabled]="saving()" (click)="salvar()">{{ saving() ? 'Salvando...' : 'Salvar' }}</button>
       </div>
-    </div>
+    </app-modal>
   }
 </div>

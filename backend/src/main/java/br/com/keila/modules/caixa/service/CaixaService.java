@@ -45,6 +45,11 @@ public class CaixaService {
         return toSessaoResponse(buscarSessaoOuFalhar(sessaoId));
     }
 
+    @Transactional(readOnly = true)
+    public List<SessaoResponse> listarSessoes() {
+        return sessaoRepository.findAllByOrderByDataAberturaDesc().stream().map(this::toSessaoResponse).toList();
+    }
+
     public SessaoResponse abrirSessao(Long caixaId, AbrirSessaoRequest request) {
         Caixa caixa = caixaRepository.findById(caixaId)
                 .orElseThrow(() -> new EntidadeNaoEncontradaException("Caixa não encontrado: " + caixaId));

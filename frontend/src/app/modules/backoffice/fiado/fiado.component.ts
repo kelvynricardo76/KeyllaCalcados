@@ -6,11 +6,12 @@ import { Fiado, Pagamento } from './fiado.model';
 import { ClienteService } from '../clientes/cliente.service';
 import { Cliente } from '../clientes/cliente.model';
 import { LojaService, Loja } from '../../../core/services/loja.service';
+import { ModalComponent } from '../../../shared/components/modal/modal.component';
 
 @Component({
   selector: 'app-fiado',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, ModalComponent],
   templateUrl: './fiado.component.html',
   styleUrl: './fiado.component.scss'
 })

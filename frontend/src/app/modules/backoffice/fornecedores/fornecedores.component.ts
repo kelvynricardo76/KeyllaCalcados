@@ -6,11 +6,12 @@ import { Compra, Fornecedor, ItemCompraRequest } from './fornecedor.model';
 import { LojaService, Loja } from '../../../core/services/loja.service';
 import { ProdutoService } from '../produtos/produto.service';
 import { Variacao } from '../produtos/produto.model';
+import { ModalComponent } from '../../../shared/components/modal/modal.component';
 
 @Component({
   selector: 'app-fornecedores',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, ModalComponent],
   templateUrl: './fornecedores.component.html',
   styleUrl: './fornecedores.component.scss'
 })

@@ -1,0 +1,97 @@
+<div class="caixa-page animate-fade-in">
+
+  <div class="page-header">
+    <div>
+      <h1>Caixa</h1>
+      <p class="text-muted">Histórico de sessões de caixa: abertura, fechamento e conferência de valores.</p>
+    </div>
+  </div>
+
+  @if (error()) {
+    <div class="form-error mb-2">⚠ {{ error() }}</div>
+  }
+
+  <div class="table-container">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Caixa</th>
+          <th>Operador</th>
+          <th>Abertura</th>
+          <th>Fechamento</th>
+          <th>Valor Abertura</th>
+          <th>Calculado</th>
+          <th>Informado</th>
+          <th>Diferença</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (loading()) {
+          <tr><td colspan="10" class="text-center text-muted">Carregando...</td></tr>
+        } @else if (sessoes().length === 0) {
+          <tr><td colspan="10" class="text-center text-muted">Nenhuma sessão de caixa registrada ainda.</td></tr>
+        } @else {
+          @for (s of sessoes(); track s.id) {
+            <tr>
+              <td>{{ s.caixaNome }}</td>
+              <td>{{ s.usuarioNome }}</td>
+              <td>{{ s.dataAbertura | date:'dd/MM/yyyy HH:mm' }}</td>
+              <td>{{ s.dataFechamento ? (s.dataFechamento | date:'dd/MM/yyyy HH:mm') : '—' }}</td>
+              <td>{{ s.valorAbertura | currency:'BRL' }}</td>
+              <td>{{ s.valorFechamentoCalculado != null ? (s.valorFechamentoCalculado | currency:'BRL') : '—' }}</td>
+              <td>{{ s.valorFechamentoInformado != null ? (s.valorFechamentoInformado | currency:'BRL') : '—' }}</td>
+              <td>
+                @if (s.diferenca != null) {
+                  <span [class.text-success]="s.diferenca === 0" [class.text-danger]="s.diferenca !== 0">
+                    {{ s.diferenca | currency:'BRL' }}
+                  </span>
+                } @else {
+                  —
+                }
+              </td>
+              <td>
+                <span class="badge" [class.badge-success]="s.status === 'ABERTA'" [class.badge-info]="s.status === 'FECHADA'">
+                  {{ s.status === 'ABERTA' ? 'Aberta' : 'Fechada' }}
+                </span>
+              </td>
+              <td>
+                <button class="btn btn-outline btn-sm" (click)="verMovimentacoes(s)">Movimentações</button>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @if (showMovimentacoes() && sessaoSelecionada(); as s) {
+    <app-modal [titulo]="'Movimentações — ' + s.caixaNome" (fechar)="fecharMovimentacoes()">
+      <div class="table-container">
+        <table class="data-table">
+          <thead><tr><th>Data</th><th>Tipo</th><th>Valor</th><th>Descrição</th><th>Usuário</th></tr></thead>
+          <tbody>
+            @if (movimentacoes().length === 0) {
+              <tr><td colspan="5" class="text-center text-muted">Nenhuma movimentação avulsa nesta sessão.</td></tr>
+            }
+            @for (m of movimentacoes(); track m.id) {
+              <tr>
+                <td>{{ m.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
+                <td>
+                  <span class="badge" [class.badge-success]="m.tipo === 'SUPRIMENTO' || m.tipo === 'RECEITA_AVULSA'"
+                        [class.badge-danger]="m.tipo === 'SANGRIA' || m.tipo === 'DESPESA'">
+                    {{ rotuloTipo(m.tipo) }}
+                  </span>
+                </td>
+                <td>{{ m.valor | currency:'BRL' }}</td>
+                <td>{{ m.descricao }}</td>
+                <td>{{ m.usuarioNome }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </app-modal>
+  }
+</div>

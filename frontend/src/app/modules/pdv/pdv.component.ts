@@ -10,11 +10,12 @@ import { ProdutoService } from '../backoffice/produtos/produto.service';
 import { Variacao } from '../backoffice/produtos/produto.model';
 import { ClienteService } from '../backoffice/clientes/cliente.service';
 import { Cliente } from '../backoffice/clientes/cliente.model';
+import { ModalComponent } from '../../shared/components/modal/modal.component';
 
 @Component({
   selector: 'app-pdv',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, ModalComponent],
   templateUrl: './pdv.component.html',
   styleUrl: './pdv.component.scss'
 })

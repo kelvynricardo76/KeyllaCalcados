@@ -123,3 +123,61 @@
   min-height: 2px;
 }
 .bar-label { font-size: 0.65rem; color: var(--text-muted); font-weight: 600; white-space: nowrap; }
+
+/* Últimas vendas */
+.vendas-recentes {
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.venda-recente-item {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border-color);
+
+  &:last-child { border-bottom: none; }
+}
+
+.venda-recente-header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-bottom: 6px;
+}
+
+.venda-hora {
+  font-weight: 700;
+  color: var(--brand-blue);
+  font-size: 0.85rem;
+}
+
+.venda-cliente {
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.venda-vendedor {
+  font-size: 0.78rem;
+}
+
+.venda-valor {
+  margin-left: auto;
+  font-weight: 800;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.venda-itens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.item-chip {
+  background: var(--surface-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}

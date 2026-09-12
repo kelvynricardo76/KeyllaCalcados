@@ -11,11 +11,13 @@ import br.com.keila.modules.produto.repository.ProdutoRepository;
 import br.com.keila.modules.relatorio.dto.ClienteRankingResponse;
 import br.com.keila.modules.relatorio.dto.DashboardResponse;
 import br.com.keila.modules.relatorio.dto.FuncionarioRankingResponse;
+import br.com.keila.modules.relatorio.dto.ItemVendaResumo;
 import br.com.keila.modules.relatorio.dto.PontoVendaHora;
 import br.com.keila.modules.relatorio.dto.ProdutoParadoResponse;
 import br.com.keila.modules.relatorio.dto.ProdutoRankingResponse;
 import br.com.keila.modules.relatorio.dto.ProdutoVencendoResponse;
 import br.com.keila.modules.relatorio.dto.RelatorioVendasResponse;
+import br.com.keila.modules.relatorio.dto.VendaDetalheResponse;
 import br.com.keila.modules.relatorio.dto.VendaResumoResponse;
 import br.com.keila.modules.usuario.model.Usuario;
 import br.com.keila.modules.venda.model.StatusVenda;
@@ -79,9 +81,15 @@ public class RelatorioService {
                 .filter(e -> e.getQuantidade() <= e.getEstoqueMinimo())
                 .count();
 
+        List<VendaDetalheResponse> ultimasVendas = vendasHoje.stream()
+                .sorted(Comparator.comparing(Venda::getCreatedAt).reversed())
+                .limit(15)
+                .map(this::toVendaDetalhe)
+                .toList();
+
         return new DashboardResponse(
                 faturamentoHoje, faturamentoOntem, vendasHoje.size(), ticketMedio,
-                fiadosEmAberto, fiadosVencidos, estoqueBaixo, vendasPorHora(vendasHoje));
+                fiadosEmAberto, fiadosVencidos, estoqueBaixo, vendasPorHora(vendasHoje), ultimasVendas);
     }
 
     public RelatorioVendasResponse relatorioVendas(LocalDate inicio, LocalDate fim) {
@@ -225,6 +233,17 @@ public class RelatorioService {
                         p.getDataValidade(), java.time.temporal.ChronoUnit.DAYS.between(hoje, p.getDataValidade()),
                         p.getDataValidade().isBefore(hoje)))
                 .toList();
+    }
+
+    private VendaDetalheResponse toVendaDetalhe(Venda v) {
+        List<ItemVendaResumo> itens = v.getItens().stream()
+                .map(i -> new ItemVendaResumo(i.getNomeProdutoSnapshot(), i.getTamanhoSnapshot(), i.getCorSnapshot(), i.getQuantidade()))
+                .toList();
+        return new VendaDetalheResponse(
+                v.getId(), v.getCreatedAt(),
+                v.getCliente() != null ? v.getCliente().getNome() : "Consumidor final",
+                v.getCliente() != null ? v.getCliente().getTelefone() : null,
+                v.getUsuario().getNome(), v.getValorTotal(), itens);
     }
 
     private List<Venda> buscarVendasFechadasDoDia(LocalDate dia) {

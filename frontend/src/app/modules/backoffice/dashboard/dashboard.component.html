@@ -89,5 +89,34 @@
       </div>
     </div>
 
+    <!-- ── Últimas vendas (o que foi vendido e para quem) ─────── -->
+    <div class="card mt-3">
+      <div class="card-header">
+        <h3>🧾 Últimas Vendas de Hoje</h3>
+      </div>
+      <div class="vendas-recentes">
+        @if (kpis()!.ultimasVendas.length === 0) {
+          <p class="text-muted text-center p-3">Nenhuma venda fechada ainda hoje.</p>
+        }
+        @for (venda of kpis()!.ultimasVendas; track venda.id) {
+          <div class="venda-recente-item">
+            <div class="venda-recente-header">
+              <span class="venda-hora">{{ venda.createdAt | date:'HH:mm' }}</span>
+              <span class="venda-cliente">
+                👤 {{ venda.clienteNome }}
+                @if (venda.clienteTelefone) { <span class="text-muted">· {{ venda.clienteTelefone }}</span> }
+              </span>
+              <span class="venda-vendedor text-muted">Vendedor: {{ venda.usuarioNome }}</span>
+              <span class="venda-valor">{{ venda.valorTotal | currency:'BRL' }}</span>
+            </div>
+            <div class="venda-itens">
+              @for (item of venda.itens; track $index) {
+                <span class="item-chip">{{ descricaoItem(item) }}</span>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
   }
 </div>

@@ -11,6 +11,7 @@ public record DashboardResponse(
         BigDecimal fiadosEmAberto,
         long fiadosVencidos,
         long estoqueBaixo,
-        List<PontoVendaHora> vendasPorHora
+        List<PontoVendaHora> vendasPorHora,
+        List<VendaDetalheResponse> ultimasVendas
 ) {
 }

@@ -3,6 +3,23 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 
+interface ItemVendaResumo {
+  nomeProduto: string;
+  tamanho?: string | null;
+  cor?: string | null;
+  quantidade: number;
+}
+
+interface VendaDetalhe {
+  id: number;
+  createdAt: string;
+  clienteNome: string;
+  clienteTelefone?: string | null;
+  usuarioNome: string;
+  valorTotal: number;
+  itens: ItemVendaResumo[];
+}
+
 interface DashboardKpis {
   faturamentoHoje: number;
   faturamentoOntem: number;
@@ -12,6 +29,7 @@ interface DashboardKpis {
   fiadosVencidos: number;
   estoqueBaixo: number;
   vendasPorHora: { hora: string; valor: number }[];
+  ultimasVendas: VendaDetalhe[];
 }
 
 @Component({
@@ -30,8 +48,8 @@ export class DashboardComponent implements OnInit {
 
   ngOnInit() {
     this.loadKpis();
-    // Atualiza a cada 60 segundos (tempo real)
-    setInterval(() => this.loadKpis(), 60_000);
+    // Atualiza periodicamente para refletir vendas recém-fechadas no PDV.
+    setInterval(() => this.loadKpis(), 20_000);
   }
 
   private loadKpis() {
@@ -52,5 +70,10 @@ export class DashboardComponent implements OnInit {
     const pontos = this.kpis()?.vendasPorHora ?? [];
     const max = Math.max(1, ...pontos.map(p => p.valor));
     return (valor / max) * 100;
+  }
+
+  descricaoItem(item: ItemVendaResumo): string {
+    const detalhe = [item.tamanho, item.cor].filter(Boolean).join(' ');
+    return `${item.quantidade}x ${item.nomeProduto}${detalhe ? ' (' + detalhe + ')' : ''}`;
   }
 }

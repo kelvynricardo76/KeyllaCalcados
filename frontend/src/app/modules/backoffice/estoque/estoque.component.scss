@@ -81,7 +81,7 @@
   &:hover {
     box-shadow: var(--shadow-md);
     transform: translateY(-2px);
-    border-color: var(--primary-color);
+    border-color: var(--brand-blue);
   }
 }
 
@@ -206,11 +206,11 @@
   cursor: pointer;
   transition: all 0.15s ease;
 
-  &:hover { border-color: var(--primary-color); }
+  &:hover { border-color: var(--brand-blue); }
 
   &.active {
-    background: var(--primary-color);
-    border-color: var(--primary-color);
+    background: var(--brand-blue);
+    border-color: var(--brand-blue);
     .tamanho-label, .tamanho-total { color: #fff; }
   }
 }
@@ -242,8 +242,8 @@
   align-items: center;
   gap: 6px;
 
-  &:hover { border-color: var(--primary-color); }
-  &.active { background: var(--primary-color); border-color: var(--primary-color); color: #fff; }
+  &:hover { border-color: var(--brand-blue); }
+  &.active { background: var(--brand-blue); border-color: var(--brand-blue); color: #fff; }
 }
 
 .cor-swatch {

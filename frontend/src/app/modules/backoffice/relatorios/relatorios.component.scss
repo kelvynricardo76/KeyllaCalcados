@@ -106,12 +106,12 @@
   &.positivo .kpi-value { color: var(--success-color, #16a34a); }
 
   &.destaque {
-    border-color: var(--brand-blue, var(--primary-color));
-    .kpi-value { color: var(--brand-blue, var(--primary-color)); }
+    border-color: var(--brand-blue);
+    .kpi-value { color: var(--brand-blue); }
   }
 
   &.principal {
-    background: var(--brand-blue, var(--primary-color));
+    background: var(--brand-blue);
     border-color: transparent;
     .kpi-label, .kpi-sub { color: rgba(255,255,255,0.8); }
     .kpi-value { color: #fff; }

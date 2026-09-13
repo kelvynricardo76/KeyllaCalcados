@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <rect width="200" height="200" rx="34" fill="#0047CC"/>
+
+  <!-- Salto alto estilizado -->
+  <g transform="translate(46,42) scale(1.35)" fill="#ffffff">
+    <path d="M6 40
+             C 4 24, 16 10, 34 8
+             C 50 6, 62 12, 66 22
+             L 74 20
+             C 78 19, 81 22, 79 26
+             L 70 34
+             C 68 46, 58 54, 46 56
+             L 46 66
+             L 40 90
+             L 33 90
+             L 36 58
+             C 20 56, 8 50, 6 40 Z"/>
+    <path d="M20 20 C 28 14, 40 13, 47 18" stroke="#0047CC" stroke-width="3" fill="none" stroke-linecap="round"/>
+  </g>
+</svg>

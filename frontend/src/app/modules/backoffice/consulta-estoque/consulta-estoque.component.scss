@@ -21,9 +21,9 @@
   cursor: pointer;
   transition: all 0.15s ease;
 
-  &:hover { border-color: var(--primary-color); color: var(--primary-color); }
+  &:hover { border-color: var(--brand-blue); color: var(--brand-blue); }
 
-  &.active { background: var(--primary-color); border-color: var(--primary-color); color: #fff; }
+  &.active { background: var(--brand-blue); border-color: var(--brand-blue); color: #fff; }
 }
 
 .busca-bar {
@@ -54,7 +54,7 @@
   font: inherit;
   color: inherit;
 
-  &:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); border-color: var(--primary-color); }
+  &:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); border-color: var(--brand-blue); }
 }
 
 .produto-imagem {
@@ -148,8 +148,8 @@
   align-items: center;
   gap: 6px;
 
-  &:hover { border-color: var(--primary-color); }
-  &.active { background: var(--primary-color); border-color: var(--primary-color); color: #fff; }
+  &:hover { border-color: var(--brand-blue); }
+  &.active { background: var(--brand-blue); border-color: var(--brand-blue); color: #fff; }
 }
 
 .cor-swatch {

@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <circle cx="200" cy="200" r="200" fill="#0012FF"/>
+
+  <!-- Salto alto estilizado -->
+  <g transform="translate(150,55) scale(1.55)" fill="#ffffff">
+    <path d="M6 40
+             C 4 24, 16 10, 34 8
+             C 50 6, 62 12, 66 22
+             L 74 20
+             C 78 19, 81 22, 79 26
+             L 70 34
+             C 68 46, 58 54, 46 56
+             L 46 66
+             L 40 90
+             L 33 90
+             L 36 58
+             C 20 56, 8 50, 6 40 Z"/>
+    <path d="M20 20 C 28 14, 40 13, 47 18" stroke="#0012FF" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+    <path d="M14 30 C 22 25, 36 24, 45 28" stroke="#0012FF" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+  </g>
+
+  <text x="200" y="288" font-family="'Poppins', Arial, sans-serif" font-size="76" font-weight="800"
+        fill="#ffffff" text-anchor="middle">Keylla</text>
+  <text x="200" y="332" font-family="'Poppins', Arial, sans-serif" font-size="42" font-weight="700"
+        fill="#ffffff" text-anchor="middle">Calçados</text>
+
+  <g fill="#ffffff">
+    <g id="lf-star" transform="translate(200,358)">
+      <path d="M0,-11 L3.23,-3.4 L11,-3.4 L4.77,2.02 L7.14,10.83 L0,5.88 L-7.14,10.83 L-4.77,2.02 L-11,-3.4 L-3.23,-3.4 Z"/>
+    </g>
+    <use href="#lf-star" x="-44"/>
+    <use href="#lf-star" x="-22"/>
+    <use href="#lf-star" x="22"/>
+    <use href="#lf-star" x="44"/>
+  </g>
+</svg>

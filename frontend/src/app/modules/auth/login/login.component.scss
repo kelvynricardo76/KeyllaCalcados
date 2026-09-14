@@ -72,21 +72,23 @@
 }
 
 .logo-img {
-  height: 90px;
+  height: 128px;
   object-fit: contain;
-  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.2));
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.25));
   margin-bottom: 8px;
 }
 
 .logo-fallback {
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 8px;
   margin-bottom: 8px;
 }
 .logo-text-fallback {
   display: flex;
   flex-direction: column;
+  align-items: center;
   .brand-name { font-family: 'Poppins', sans-serif; font-size: 1.8rem; font-weight: 800; color: white; line-height: 1; }
   .brand-sub  { font-size: 1rem; color: rgba(255,255,255,0.9); font-weight: 400; }
 }
@@ -95,7 +97,6 @@
   display: flex;
   justify-content: center;
   gap: 3px;
-  margin: 6px 0;
   .star { color: #FFD700; font-size: 0.85rem; text-shadow: 0 1px 4px rgba(0,0,0,0.2); }
 }
 
